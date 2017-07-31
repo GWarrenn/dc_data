@@ -8,6 +8,7 @@ library('devtools')
 library("plyr")
 library("gganimate")
 library("magick")
+library("ggthemes")
 
 data <- read.csv(file="C:\\Users\\augus\\OneDrive\\Documents\\GitHub\\dc_data\\data\\real_estate\\Zip_Zhvi_DC.csv")
 
@@ -96,6 +97,8 @@ for(i in 2000:2016) {
 
 Sys.setenv(PATH = paste("C:\\Program Files\\ImageMagick-7.0.6-Q16",Sys.getenv("PATH"), sep = ";"))
 
+all_data$dollar_amt <- paste0("$", formatC(as.numeric(all_data$year1), format="f", digits=0, big.mark=","))
+
 p1 <- ggplot(all_data, aes(year2, year1, color = RegionName, frame = date1)) +
   geom_point(size=5) + expand_limits(y=0,x=0) + labs(x = all_data$date2,y=all_data$date1)
 
@@ -103,8 +106,12 @@ gganimate(p1, "output.gif",interval = .8)
 
 p2 <- ggplot(all_data, aes(x=RegionName, y=year1, fill = RegionName, frame = date1)) +
   geom_bar(stat="identity",position = "identity") +
-  geom_text(aes(label=all_data$year1), vjust=1.5, position=position_dodge(.5), size=4)
+  geom_text(aes(label=all_data$dollar_amt), vjust=-.5, position=position_dodge(.5), size=4) + 
+  scale_color_fivethirtyeight(all_data$RegionName) + 
+  theme_fivethirtyeight() + labs(caption = "Source: Zillow Home Value Index Data", 
+                                 x = "Zip Code", y = "$") + ggtitle("Home Value Index: ") + 
+  guides(fill=FALSE) + theme(plot.title = element_text(hjust = 0.5))
 
-gganimate(p2, "output_bars.gif",interval = .8,ani.width=800, ani.height=600)
+gganimate(p2, "output_bars.gif",interval = .2,ani.width=800, ani.height=600)
 
 

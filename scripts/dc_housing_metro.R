@@ -27,11 +27,26 @@ for(i in 1:nrow(housing)) {
   Sys.sleep(0.5)  # API only allows a certain amount of requests per second
 }
 
+fix <- function(s){
+  gsub(" ", "+", str_trim(s))
+}
+
+for(i in 1:nrow(housing)) {
+
+  GEOCODE.PREFIX <- "http://geocoding.geo.census.gov/geocoder/geographies/address?street="
+  GEOCODE.SUFFIX <- "&benchmark=Public_AR_Census2010&vintage=Census2010_Census2010&layers=14&format=json"
+  
+  URL <- paste(GEOCODE.PREFIX,fix(housing$Address[i]), "&city=Washington", "&state=DC", GEOCODE.SUFFIX)
+  JSON <- fromJSON(URL)
+  try(housing$census_tract[i] <- JSON$result$addressMatches[[1]]$geographies$`Census Blocks`[[1]]$TRACT)
+  Sys.sleep(0.5)
+}
+
 ## Cartesian join housing data to metro data 
 
-data <- read.csv("data/transportation/Metro_Stations_in_DC.csv")
+metro_data <- read.csv("data/transportation/Metro_Stations_in_DC.csv")
 
-combined <- merge(data,housing,by=NULL) 
+combined <- merge(metro_data,housing,by=NULL) 
 
 combined$lat <- as.numeric(as.character(combined$lat), digits=15)
 combined$lon <- as.numeric(as.character(combined$lon), digits=15)
@@ -56,6 +71,7 @@ for(i in 1:nrow(closest_metro)) {
                           destination = paste(closest_metro$Y[i],"+",closest_metro$ï..X[i],sep=""),
                           mode = "walking")
   closest_metro$walking_time[i] <- as.numeric(results$Time)
+  Sys.sleep(0.5)
   
 }  
 
@@ -63,18 +79,13 @@ for(i in 1:nrow(closest_metro)) {
 
 plot_1_scatter <- ggplot(closest_metro,aes(x=as.numeric(closest_metro$distance),y=closest_metro$adj_price)) + geom_point()
 
+ggplot(closest_metro,aes(x=closest_metro$distance,y=closest_metro$walking_time)) + 
+  geom_point() + geom_smooth()
+
 ## Plot of housing price broken up by Ward
 
-plot_2_scatter_quadrant <- ggplot(closest_metro,aes(x=as.numeric(closest_metro$distance),y=closest_metro$adj_price)) + geom_point() + 
+plot_2_scatter_quadrant <- ggplot(closest_metro,aes(x=as.numeric(closest_metro$walking_time),y=closest_metro$adj_price)) + geom_point() + 
   facet_wrap( ~ quadrant) + scale_y_continuous(labels=comma)
-
-overall_model <- lm(closest_metro$adj_price ~ closest_metro$distance)
-
-summary(overall_model)$r.squared
-
-overall_model_w_ward <- lm(closest_metro$adj_price ~ closest_metro$distance + closest_metro$quadrant)
-
-summary(overall_model_w_ward)$r.squared
 
 #######################################
 
@@ -130,6 +141,20 @@ plot_4b_price_time <- ggplot(avg_price_by_time, aes(x = reorder(avg_price_by_tim
   labs(x = "Metro Stop", y = "Average housing price per bedroom") +
   theme(plot.title = element_text(hjust = 0.5),text = element_text(size=10)) +  scale_y_continuous(labels=comma)
 
+## modelling
+
+overall_model <- lm(closest_metro$adj_price ~ closest_metro$walking_time)
+
+summary(overall_model)$r.squared
+
+overall_model_w_ward <- lm(closest_metro$adj_price ~ closest_metro$distance + closest_metro$quadrant)
+
+summary(overall_model_w_ward)$r.squared
+
+
+cols <- c('distance')
+
+rf <- randomForest(closest_metro$adj_price ~ ., data=closest_metro[,cols], ntree=20)
 
 #  
 

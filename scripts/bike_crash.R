@@ -5,9 +5,10 @@ library(dplyr)
 library(ggplot2)
 library(ggmap)
 library(ggthemes)
-library(gganimate)
-library(magick)
+library(scales)
+library(lubridate)
 library(gridExtra)
+library(stringr)
        
 ##########################################
 ##
@@ -118,15 +119,11 @@ plot_01_crash_map <- ggmap(map) + stat_density2d(data=bike_data, aes(x=ï..X, y=Y
   #geom_point(data=bike_data, aes(x=ï..X, y=Y), shape=16, alpha=0.2) +
   guides(size=FALSE, alpha = FALSE) + xlab("") + ylab("") + 
   scale_alpha_continuous(range=c(0.1,0.5)) +
-  ggtitle("Washginton DC Bike Accidents") + theme_fivethirtyeight() +
+  ggtitle("Washington DC Bike Accidents") + theme_fivethirtyeight() +
   theme(plot.title = element_text(hjust = 0.5),
         axis.title=element_blank(),axis.text=element_blank(),axis.ticks=element_blank(),
         strip.text = element_text(size = 12)) + guides(fill=guide_legend(title="Crash Density")) +
   labs(caption="DC OpenData Portal: http://opendata.dc.gov/datasets/crashes-in-dc")
-
-png(filename = "images/crash_map.png",width=800,height=600)  
-print(plot_01_crash_map)
-dev.off()
 
 ggsave(plot = plot_01_crash_map, "images/crash_map.png", w = 10.67, h = 8,type = "cairo-png")
 
@@ -304,6 +301,80 @@ plot_07_accidents_weather <- ggplot(data = crashes_by_temp, aes(x = avg_max_temp
 
 ggsave(plot = plot_07_accidents_weather, "images/accidents_weather.png", w = 10.67, h = 8,type = "cairo-png")
 
+## Crashes by road type (functional class)
 
+street_type <- read.csv("data/transportation/Street_Centerlines.csv")
+
+street_type_crash <- merge(bike_data,street_type,by="ROADWAYSEGID")
+
+function_class <- street_type_crash %>%
+  filter(!is.na(FUNCTIONALCLASS) & FUNCTIONALCLASS!="") %>%
+  group_by(FUNCTIONALCLASS) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n))
+
+plot_10_road_class <- ggplot(function_class, aes(x = reorder(FUNCTIONALCLASS, -n), y = n,fill=FUNCTIONALCLASS)) + 
+  geom_bar(stat = "identity",show.legend=FALSE) +
+  labs(caption = "Source: DC OpenData Portal: http://opendata.dc.gov/datasets/crashes-in-dc", 
+       y = "Number of Crashes", x = "") + ggtitle("Total Number of Bike Accidents by Road Classification") +
+  geom_text(aes(label=n),vjust=-.5, size=5) +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5))
+
+ggsave(plot = plot_10_road_class, "images/road_classification.png", w = 10.67, h = 8,type = "cairo-png")
+  
+##########################################      
+##         
+## BIKELANES!
+##
+##########################################
+
+bike_lanes <- read.csv("data/transportation/Bicycle_Lanes.csv")
+
+bike_lanes_crash <- merge(bike_data,bike_lanes,by="STREETSEGID",all.x=TRUE)
+
+# % on/off bike lane roads
+
+bike_lane_counts <- bike_lanes_crash %>%
+  summarise(bike_lane= sum(!is.na(FACILITY)),
+            non_bike_lane= sum(is.na(FACILITY)))
+
+wide_bike_lane_counts <- melt(bike_lane_counts)
+
+wide_bike_lane_counts$variable <- as.character(wide_bike_lane_counts$variable)
+
+wide_bike_lane_counts$variable[wide_bike_lane_counts$variable=="bike_lane"] <- "Bike Lane"
+wide_bike_lane_counts$variable[wide_bike_lane_counts$variable=="non_bike_lane"] <- "Non Bike Lane"
+
+plot_08_bike_lanes <- ggplot(wide_bike_lane_counts, aes(x = variable, y = value,fill=variable)) + 
+  geom_bar(stat = "identity",show.legend=FALSE) +
+  labs(caption = "Source: DC OpenData Portal: http://opendata.dc.gov/datasets/crashes-in-dc", 
+       y = "Number of Crashes", x = "") + ggtitle("Total Number of Bike Accidents On/Off Bike Lane Roads") +
+  geom_text(aes(label=value),vjust=-.5, size=5) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5))
+
+ggsave(plot = plot_08_bike_lanes, "images/bike_lanes.png", w = 10.67, h = 8,type = "cairo-png")
+
+# most dangerous roads with bike lanes
+
+most_dangerous_bike_lanes <- bike_lanes_crash %>%
+  filter((!is.na(FACILITY))) %>%
+  group_by(NEARESTINTSTREETNAME) %>%
+  summarise (n = n())  
+
+most_dangerous_bike_lanes <- most_dangerous_bike_lanes[!(is.na(most_dangerous_bike_lanes$NEARESTINTSTREETNAME) | most_dangerous_bike_lanes$NEARESTINTSTREETNAME==""), ]
+
+most_dangerous_bike_lanes <- arrange(most_dangerous_bike_lanes,desc(n))
+most_dangerous_bike_lanes = most_dangerous_bike_lanes[1:10,]
+
+plot_09_most_dangerous_bike_lanes <- ggplot(most_dangerous_bike_lanes, aes(x = reorder(NEARESTINTSTREETNAME, n), y = n,fill=n)) + 
+  geom_bar(stat = "identity",show.legend=FALSE) + coord_flip() + 
+  labs(caption = "Source: DC OpenData Portal: http://opendata.dc.gov/datasets/crashes-in-dc", 
+       y = "Number of Crashes", x = "") + ggtitle("Most Dangerous Bike Lanes in DC (For Cyclists)") +
+  geom_text(aes(label=n),hjust=-0.1, position=position_dodge(.5), size=5) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5))
 
 

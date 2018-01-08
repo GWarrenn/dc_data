@@ -6,6 +6,45 @@ library(ggplot2)
 library(ggmap)
 library(ggthemes)
 library(gmapsdistance)
+library(gganimate)
+library(magick)
+
+######################################################
+##
+## Housing trends from Zillow
+##
+######################################################
+
+data <- read.csv(file="data/real_estate/Zip_Zhvi_DC.csv")
+
+
+long <- melt(data, id.vars= c("RegionID","RegionName","City",
+                              "State","Metro","CountyName","SizeRank"))
+
+long$variable <- gsub("X", "", long$variable)
+long$variable <- gsub("\\.", "/", long$variable)
+long$variable <- gsub("$", "/01", long$variable)
+
+long$variable <- as.Date(long$variable, "%Y/%m/%d")
+long$RegionName <- as.character(long$RegionName)
+
+long$year <- sub("-.*", "", long$variable)
+
+Sys.setenv(PATH = paste("C:\\Program Files\\ImageMagick-7.0.6-Q16",Sys.getenv("PATH"), sep = ";"))
+
+long$dollar_amt <- paste0("$", formatC(as.numeric(long$value), format="f", digits=0, big.mark=","))
+long$dollar_amt[long$dollar_amt=="$NA"] <- ""
+
+p2 <- ggplot(data=filter(long,as.numeric(year)>=2000), 
+             aes(x=RegionName, y=value, fill = RegionName, frame = variable)) +
+  geom_bar(stat="identity",position = "identity") +
+  geom_text(aes(label=dollar_amt), vjust=-.5, position=position_dodge(.5), size=4) + 
+  scale_color_fivethirtyeight(long$RegionName) + 
+  theme_fivethirtyeight() + labs(caption = "Source: Zillow Home Value Index Data", 
+                                 x = "Zip Code", y = "$") + ggtitle("Home Value Index: ") + 
+  guides(fill=FALSE) + theme(plot.title = element_text(hjust = 0.5))
+
+gganimate(p2, "output_bars.gif",interval = .2,ani.width=800, ani.height=600)
 
 ######################################################
 ##
@@ -26,8 +65,8 @@ for(i in 1:nrow(housing)) {
   try(housing$geoAddress[i] <- as.character(result[3]))
   Sys.sleep(0.5)  # API only allows a certain amount of requests per second
 }
-
-fix <- function(s){
+#
+#fix <- function(s){
   gsub(" ", "+", str_trim(s))
 }
 
@@ -36,10 +75,12 @@ for(i in 1:nrow(housing)) {
   GEOCODE.PREFIX <- "http://geocoding.geo.census.gov/geocoder/geographies/address?street="
   GEOCODE.SUFFIX <- "&benchmark=Public_AR_Census2010&vintage=Census2010_Census2010&layers=14&format=json"
   
+  housing$census_tract[i] <- NA
+  
   URL <- paste(GEOCODE.PREFIX,fix(housing$Address[i]), "&city=Washington", "&state=DC", GEOCODE.SUFFIX)
-  JSON <- fromJSON(URL)
+  try(JSON <- fromJSON(URL))
   try(housing$census_tract[i] <- JSON$result$addressMatches[[1]]$geographies$`Census Blocks`[[1]]$TRACT)
-  Sys.sleep(0.5)
+
 }
 
 ## Cartesian join housing data to metro data 

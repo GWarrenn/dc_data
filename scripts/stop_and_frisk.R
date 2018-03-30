@@ -19,6 +19,7 @@ library(rgeos)
 library(geosphere)
 library(ggmap)
 library(reshape2)
+library(htmltools)
 
 ###################################
 ##
@@ -85,12 +86,8 @@ ggplot(stop_frisk_monthly,aes(x=year_month,y=n,group=1)) +
   
 stop_frisk_total$time_of_day <- format(strptime(stop_frisk_total$Report_taken_date_EST, "%Y-%m-%d %H:%M:%S"), "%H")
   
-  
 ## where do most stop and frisks occur? -- bar graph of neighborhood
 ## what are the most cited reasons for stop and frisk?
-
-stop_frisk <- stop_frisk_total[stop_frisk_total$Year==2016,]
-
 
 ###################################
 ##
@@ -103,31 +100,32 @@ stop_frisk <- stop_frisk_total[stop_frisk_total$Year==2016,]
 
 # extracting street name from block name
 
-stop_frisk_total$street_name <- ifelse(grepl("BLOCK OF",stop_frisk_total$Block.Address),
-                               (trimws(gsub(pattern = "^.* BLOCK OF",
-                                     replacement = "",
-                                     x = stop_frisk_total$Block.Address))),
-                               (trimws(gsub(pattern = "^.* B/O",
+stop_frisk_total$Block.Address <- gsub(pattern = " BLK | BLOCK OF ",
+                                       replacement = " B/O ",
+                                       x = stop_frisk_total$Block.Address)
+
+stop_frisk_total$street_name <- trimws(gsub(pattern = "^.* B/O",
                                replacement = "",
-                               x = stop_frisk_total$Block.Address))))
+                               x = stop_frisk_total$Block.Address))
 
 # fixing errors in street names
 
 errors <- c("CAPTIOL","CAPITAL","ILINOI","/ SCAPITOL","13'TH","EAST CAP ST","E CAPITOL","MLK JR",
   "CAPITOL / 295N","MLKJR","MT PLEASANT","MARTIN LUTHER KING AV","MLK AV","4ST","7TH T",
-  "V STNW","N CAPITOL ST","RI AV","N / W","$GA AV","MD AV","AVENW","PA AV","STNW",
+  "V STNW","N CAPITOL ST","RI AV","N / W","$GA ","MD AV","AVENW","PA AV","STNW",
   "NORTH CAPITOL NE","19THST","7TH T","NEW YORK AVENE NE","ST;NW","13 TH","N CAP ST",
   "ECAPITAL ST",' ALY ',' AVE ',' AV ',' BLVD ',' BRG ',' CIR ',' CT ',' CRES ',' DR ',
   ' EXPY ',' FWY ',' GDN ',' GDNS ',' GRN ',' KYS ',' LN ',' LOOP ',' MEWS ',' PKWY ',
   ' PL ',' PLZ ',' RD ',' ROW ',' SQ ',' ST ',' TER ',' TR ',' WALK ',' WAY ',' ALY$',
   ' AVE$',' AV$',' BLVD$',' BRG$',' CIR$',' CT$',' CRES$',' DR$',' EXPY$',' FWY$',' GDN$',
   ' GDNS$',' GRN$',' KYS$',' LN$',' LOOP$',' MEWS$',' PKWY$',' PL$',' PLZ$',' RD$',' ROW$',
-  ' SQ$',' ST$',' TER$',' TR$',' WALK$',' WAY$','WEST VA')
+  ' SQ$',' ST$',' TER$',' TR$',' WALK$',' WAY$','WEST VA', ' MARYLAD ',' MD ',' MASS ', '[.]',
+  'THS ',' THS',' IDEPENDENCE ')
 
 fix <- c("CAPITOL","CAPITOL","ILLINOIS","SOUTH CAPITOL","13TH","EAST CAPITOL ST","EAST CAPITOL",
   "MARTIN LUTHER KING JR","CAPITOL STREET","MARTIN LUTHER KING JR","MOUNT PLEASANT",
   "MARTIN LUTHER KING JR AV","MARTIN LUTHER KING JR AV","4TH STREET","7TH STREET",
-  "V ST NW","NORTH CAPITOL ST","RHODE ISLAND AV","NW","GEORGIA AV","MARYLAND AV",
+  "V ST NW","NORTH CAPITOL ST","RHODE ISLAND AV","NW","GEORGIA ","MARYLAND AV",
   "AVE NW","PENNSYLVANIA AV","ST NW","NORTH CAPITOL STREET","19TH STREET","7TH STREET",
   "NEW YORK AVENUE NE","ST NW","13TH","NORTH CAPITOL ST","EAST CAPITOL ST",' ALLEY ',
   ' AVENUE ',' AVENUE ',' BOULEVARD ',' BRIDGE ',' CIRCLE ',' COURT ',' CRESCENT ',' DRIVE ',
@@ -136,27 +134,27 @@ fix <- c("CAPITOL","CAPITOL","ILLINOIS","SOUTH CAPITOL","13TH","EAST CAPITOL ST"
   ' TERRACE ',' WALK ',' WAY',' ALLEY',' AVENUE',' AVENUE',' BOULEVARD',' BRIDGE',
   ' CIRCLE',' COURT',' CRESCENT',' DRIVE',' EXPRESSWAY',' FREEWAY',' GARDENS',
   ' GARDENS',' GREEN',' KEYS',' LANE',' LOOP',' MEWS',' PARKWAY',' PLACE',
-  ' PLAZA',' ROAD',' ROW',' SQUARE',' STREET',' TERRACE',' TERRACE',' WALK',' WAY','WEST VIRGINIA')
+  ' PLAZA',' ROAD',' ROW',' SQUARE',' STREET',' TERRACE',' TERRACE',' WALK',' WAY','WEST VIRGINIA',
+  ' MARYLAND ',' MARYLAND ',' MASSACHUSETTS ','','TH ',' TH ',' INDEPENDENCE ')
 
 i <- 1
 
 for (e in errors) {
-  
   stop_frisk_total$street_name <- gsub(pattern = e,
                                        replacement = fix[i],
                                        x = stop_frisk_total$street_name)
   i <- i + 1
 } 
 
+stop_frisk_total$street_name <- gsub(pattern = "\\\\",
+                                     replacement = "",
+                                     x = stop_frisk_total$street_name)
+
 # extracting block number from block name
 
-stop_frisk_total$block_number <- ifelse(grepl("BLOCK OF",stop_frisk_total$Block.Address),
-       (gsub(pattern = "BLOCK OF.*$",
+stop_frisk_total$block_number <- gsub(pattern = "B/O.*$",
                     replacement = "",
-                    x = stop_frisk_total$Block.Address)),
-       (gsub(pattern = "B/O.*$",
-                    replacement = "",
-                    x = stop_frisk_total$Block.Address)))
+                    x = stop_frisk_total$Block.Address)
 
 # merge stop and frisk to block data with lat/lon
 
@@ -183,6 +181,10 @@ unmatched <- merge(stop_frisk_total,select(combined,id:ESRI_OID),by = "id",all.x
 unmatched <- unmatched %>%
             filter(is.na(LATITUDE))
 
+unmatched$street_name <- gsub(pattern = " AND | & ",
+                              replacement = " / ",
+                              x = unmatched$street_name)
+
 block_data$new_match_field <- paste(block_data$FROMSTREETDISPLAY,"/",block_data$ONSTREETDISPLAY)
 
 second_merge <- merge(select(unmatched,id:block_number.x),block_data,
@@ -202,7 +204,7 @@ third_merge <- merge(select(unmatched,street_name:block_number.x),block_data,
                       by.x = "street_name", by.y = "new_match_field",all.x=TRUE)
 
 third_match <- third_merge %>%
-  filter(!is.na(LATITUDE))
+  filter(is.na(LATITUDE))
 
 colnames(second_match)[colnames(second_match)=="block_number.x"] <- "block_number"
 colnames(third_match)[colnames(third_match)=="block_number.x"] <- "block_number"
@@ -222,8 +224,32 @@ for(i in 1:nrow(stop_frisk)) {
 
 ###################################
 ##
+## Mapping stop and frisk
+##
+###################################
+
+stop_frisk_new$race_ethn <- ifelse(stop_frisk_new$Subject_Ethnicity=='Hispanic Or Latino','Hispanic/Latino',
+                                   stop_frisk_new$Subject_Race)
+
+stop_frisk_new$race_ethn <- as.character(stop_frisk_new$Subject_Race)
+stop_frisk_new$race_ethn[stop_frisk_new$Subject_Ethnicity == "Hispanic Or Latino"] <- "Hispanic/Latino" 
+
+stop_frisk_new$juvenile <- ifelse(stop_frisk_new$Age == "Juvenile","Juvenile","Adult")
+stop_frisk_new$juvenile[stop_frisk_new$Age == "Unknown" | stop_frisk_new$Age == ""] <- "Unknown" 
+
+m = leaflet() %>% addTiles()
+
+m = leaflet(stop_frisk_new) %>% addTiles() %>% 
+  addCircleMarkers(radius =5, 
+  color = stop_frisk_new$race_ethn,
+  stroke = FALSE,
+  fillOpacity = 0.5)
+
+
+###################################
+##
 ## Matching incidents to neighborhoods using DC neighborhood shapefile 
-## provided by DC OPenData
+## provided by DC OpenData
 ## h/t: https://gis.stackexchange.com/questions/133625/checking-if-points-fall-within-polygon-shapefile
 ##
 ###################################
@@ -235,7 +261,7 @@ coordinates(stop_frisk_new) <- ~ LONGITUDE + LATITUDE
 
 neighborhoods <- levels(dc_neighborhoods$NBH_NAMES)
 
-new_df <- data.frame()
+nbh_sf_df <- data.frame()
 
 for (n in neighborhoods) {
   
@@ -243,40 +269,32 @@ for (n in neighborhoods) {
   
   test <- data.frame()
   
-  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == n, ]
+  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == "Walter Reed", ]
 
   proj4string(stop_frisk_new) <- proj4string(cluster)
   
   test <- stop_frisk_new[complete.cases(over(stop_frisk_new, cluster)), ]
+  test <- stop_frisk_new[over(stop_frisk_new, cluster),]
   test_df <- as.data.frame(test)
   try(test_df$neighborhood <- n)
   
-  new_df <- rbind(new_df,test_df)
+  nbh_sf_df <- rbind(nbh_sf_df,test_df)
 
 }
 
 ###################################
 ##
-## Calculate race/age breakdowns of stop ad frisk at neighborhood level
+## Calculate race/age breakdowns of stop and frisk at neighborhood level
 ##
 ###################################
 
-new_df$race_ethn <- ifelse(new_df$Subject_Ethnicity=='Hispanic Or Latino','Hispanic/Latino',
-                           new_df$Subject_Race)
-
-new_df$race_ethn <- as.character(new_df$Subject_Race)
-new_df$race_ethn[new_df$Subject_Ethnicity == "Hispanic Or Latino"] <- "Hispanic/Latino" 
-
-new_df$juvenile <- ifelse(new_df$Age == "Juvenile","Juvenile","Adult")
-new_df$juvenile[new_df$Age == "Unknown" | new_df$Age == ""] <- "Unknown" 
-
-neighborhood_stop_frisk_race <- new_df %>%
+nbh_sf_race <- nbh_sf_df %>%
   group_by(neighborhood,race_ethn) %>%
   summarise (n = n()) %>%
   mutate(freq=n/sum(n)) %>%
   rename(subgroup = race_ethn)
 
-neighborhood_stop_frisk_race$demo_group <- "Race/Ethnicity"
+nbh_sf_race$demo_group <- "Race/Ethnicity"
 
 neighborhood_stop_frisk_age <- new_df %>%
   group_by(neighborhood,juvenile) %>%
@@ -327,6 +345,70 @@ nbh_sf_demos_census <- merge(neighborhood_stop_frisk_demos,census_data,by.x=c("N
 ##
 ###################################
 
+nbh_sf_demos_wide <- dcast(nbh_sf_race, neighborhood ~ subgroup , value.var="n")
+
+nbh_sf_demos_wide <- nbh_sf_demos_wide %>%
+                          replace(is.na(.), 0) %>%
+                          mutate(Total = rowSums(.[2:9]))
+
+additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
+
+nbh_sf_demos_wide <- merge(nbh_sf_demos_wide,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
+
+poly_df <- as.data.frame(dc_neighborhoods)
+
+poly_df <- merge(nbh_sf_demos_wide,poly_df,
+                          by.x="NAME",
+                          by.y="NAME")
+
+dc_neighborhoods <- dc_neighborhoods[as.numeric(as.character(dc_neighborhoods$OBJECTID)) < 40,]
+row.names(dc_neighborhoods@data) <- NULL
+row.names(dc_neighborhoods@data) <- as.character(dc_neighborhoods$NBH_NAMES)
+
+poly_df <- poly_df[order(as.numeric(as.character(poly_df$OBJECTID))),] 
+
+row.names(poly_df) <- NULL
+row.names(poly_df) <- 0:38
+
+names <- levels(dc_neighborhoods$NBH_NAMES)
+
+i <- 1
+
+for (n in names) {
+  slot(slot(dc_neighborhoods, "polygons")[[i]], "ID") = names[i]
+  i <- i + 1
+}
+
+s_poly <- SpatialPolygonsDataFrame(dc_neighborhoods, poly_df,match.ID = FALSE)
+
+writeOGR(s_poly, ".", "s_poly", driver="ESRI Shapefile",overwrite_layer = TRUE)
+
+labels <- sprintf(
+  "<strong>%s</strong><br/>%g ",
+  s_poly$NBH_NAMES, s_poly$Total
+) %>% lapply(htmltools::HTML)
+
+bins <- c(0, 250, 500, 750, 1000, 1250, 1500, 2000, Inf)
+pal <- colorBin("YlOrRd", domain = s_poly$Total, bins = bins)
+
+leaflet(s_poly) %>% addTiles() %>%
+  addPolygons(color = "#444444", weight = 1, smoothFactor = 0.5,
+              opacity = 1.0, fillOpacity = 0.5,
+              fillColor = ~colorQuantile("YlOrRd", Total)(Total),
+              highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                  bringToFront = TRUE),
+              label = labels,
+              labelOptions = labelOptions(
+                style = list("font-weight" = "normal", padding = "3px 8px"),
+                textsize = "15px",
+                direction = "auto")) %>%
+  addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
+            position = "bottomright")
+          
+nbh_sf_demos_census$diff <-  (nbh_sf_demos_census$census_value/100) - nbh_sf_demos_census$freq
+
+nbh_sf_demos_census$diffcats <- cut(nbh_sf_demos_census$diff,4)
+
 ggplot(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")),aes(x=freq,y=census_value)) + 
   geom_point(aes(size=n)) + scale_x_continuous(limits = c(0, 1),labels = scales::percent) + scale_y_continuous(limits = c(0, 100)) +
   geom_abline(intercept = 0,slope = 100) + geom_hline(yintercept = 50) + geom_vline(xintercept = .5) +
@@ -334,28 +416,32 @@ ggplot(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")),aes(x=freq,y=ce
   labs(x = "Percent of Stop and Frisk", y = "Percent of Neighborhood Black Residents") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
 
-nbh_sf_demos_census$diff <-  (nbh_sf_demos_census$census_value/100) - nbh_sf_demos_census$freq
-
 ggplot(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")), 
        aes(x = reorder(neighborhood, diff), 
-           y = as.numeric(diff),fill=diff)) + 
-  geom_bar(stat = "identity",show.legend=FALSE) + coord_flip() +
-  ggtitle("Neighborhood Difference in Stop & Frisk Rate & Population") + 
+           y = as.numeric(diff),color=diff)) + 
+  #geom_bar(stat = "identity",show.legend=FALSE) + 
+  geom_point(aes(size=n),stat='identity') + coord_flip() +
+  ggtitle("Neighborhood Difference in Stop & Frisk Rate & Population \n among Black Residents (2012 - 2017)") + 
   #geom_text(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")),aes(label=nbh_sf_demos_census$n), vjust=0,hjust=-0.1, position=position_dodge(.5), size=3,) + 
   theme_fivethirtyeight() +
   labs(x = "Neighborhood", y = "Stop & Frisk - Population") +
-  theme(plot.title = element_text(hjust = 0.5),text = element_text(size=10)) +
-  scale_fill_gradient(low = "red", high = "green", limits=c(min(nbh_sf_demos_census$diff),max(nbh_sf_demos_census$diff))) +
-  scale_y_continuous(labels=scales::percent) 
-  #scale_x_discrete(labels = function(x) str_wrap(x, width = 80))
+  theme(plot.title = element_text(hjust = 0.5),text = element_text(size=10)) + guides(color=FALSE) +
+  scale_color_gradient(low = "red", high = "green", limits=c(min(nbh_sf_demos_census$diff),max(nbh_sf_demos_census$diff))) +
+  scale_y_continuous(labels=scales::percent) +
+  geom_segment(aes(y = 0, 
+                 x = neighborhood, 
+                 yend = diff, 
+                 xend = neighborhood), 
+                 color = "dark grey")
 
-
+ggsave(plot = plot_xx_sf_pop_diff, "images/pop_diff.png", w = 10.67, h = 8,type = "cairo-png")
 
 ###################################
 ##
 ## Tying in crime data
 ##
 ###################################
+
 years = c(2012,2013,2014,2015,2016)
 
 crime_all_years = data.frame()
@@ -389,8 +475,8 @@ for (y in years) {
   
   crime_neighborhood <- new_df %>%
     group_by(neighborhood) %>%
-    summarise (arrests = n()) %>%
-    mutate(arrest_pct =n/sum(n))
+    summarise(arrests = n()) %>%
+    mutate(arrest_pct =arrests/sum(arrests))
   
   crime_neighborhood$year <- y
   
@@ -398,27 +484,39 @@ for (y in years) {
 
 }
 
-neighborhood_stop_frisk_yearly <- new_df %>%
+nbh_sf_yearly <- nbh_sf_df %>%
   group_by(Year,neighborhood) %>%
   summarise (stop_frisks = n()) 
 
-neighborhood_stop_frisk_yearly <- merge(neighborhood_stop_frisk_yearly,crime_all_years,
-                                        by.x = c("neighborhood","Year"),
-                                        by.y = c("neighborhood","year"))
+nbh_sf_yearly$prev_year <- as.numeric(as.character(nbh_sf_yearly$Year)) - 1
 
-ggplot(data=filter(neighborhood_stop_frisk_yearly,neighborhood %in% c("Columbia Heights, Mt. Pleasant, Pleasant Plains, Park View"))) + 
+nbh_sf_yearly <- merge(nbh_sf_yearly,crime_all_years,
+                        by.x = c("neighborhood","prev_year"),
+                        by.y = c("neighborhood","year"))
+
+ggplot(data=nbh_sf_yearly,aes(x=stop_frisks,y=arrests)) + 
+  geom_point() + 
+  geom_smooth(method='glm',formula=y~x) +
+  theme_fivethirtyeight() +
+  labs(x = "Total Stop and Frisk", y = "Total Crime Reported") +
+  theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
+
+
+ggplot(data=filter(nbh_sf_yearly,neighborhood %in% c("Columbia Heights, Mt. Pleasant, Pleasant Plains, Park View"))) + 
   geom_line(aes(x=Year,y=stop_frisks,group=1)) +
-  geom_line(aes(x=Year,y=n/5,group=1)) +
+  geom_line(aes(x=Year,y=arrests/5,group=1)) +
   scale_y_continuous(sec.axis = sec_axis(~.*5, name = "Arrests")) +
   theme_fivethirtyeight() +
   scale_colour_manual(values = c("blue", "red")) +
   labs(x = "Year", y = "Stop & Frisk", colour = "Legend") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
 
-ggplot(data=neighborhood_stop_frisk_yearly) + 
+ggplot(data=nbh_sf_yearly) + 
   geom_line(aes(x=Year,y=stop_frisks,group=neighborhood)) +
   theme_fivethirtyeight() +
   labs(x = "Year", y = "Stop & Frisk", colour = "Legend") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
 
 ## total stop and frisk counts by neighborhood race from census
+
+

@@ -19,7 +19,7 @@ library(rgeos)
 library(geosphere)
 library(ggmap)
 library(reshape2)
-library(htmltools)
+library(ggthemes)
 
 ###################################
 ##
@@ -158,6 +158,8 @@ stop_frisk_total$block_number <- gsub(pattern = "B/O.*$",
 
 # merge stop and frisk to block data with lat/lon
 
+block_data <- read.csv("data/shapefiles/Block_Centroids.csv")
+
 block_data$ONSTREETDISPLAY <- trimws(block_data$ONSTREETDISPLAY)
 
 combined <- merge(stop_frisk_total,block_data,
@@ -204,7 +206,7 @@ third_merge <- merge(select(unmatched,street_name:block_number.x),block_data,
                       by.x = "street_name", by.y = "new_match_field",all.x=TRUE)
 
 third_match <- third_merge %>%
-  filter(is.na(LATITUDE))
+  filter(!is.na(LATITUDE))
 
 colnames(second_match)[colnames(second_match)=="block_number.x"] <- "block_number"
 colnames(third_match)[colnames(third_match)=="block_number.x"] <- "block_number"
@@ -254,7 +256,7 @@ m = leaflet(stop_frisk_new) %>% addTiles() %>%
 ##
 ###################################
 
-dc_neighborhoods <- readOGR("Neighborhood_Clusters.shp",
+dc_neighborhoods <- readOGR("data/shapefiles",
                             layer="Neighborhood_Clusters")
 
 coordinates(stop_frisk_new) <- ~ LONGITUDE + LATITUDE
@@ -269,12 +271,11 @@ for (n in neighborhoods) {
   
   test <- data.frame()
   
-  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == "Walter Reed", ]
+  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == n , ]
 
   proj4string(stop_frisk_new) <- proj4string(cluster)
   
   test <- stop_frisk_new[complete.cases(over(stop_frisk_new, cluster)), ]
-  test <- stop_frisk_new[over(stop_frisk_new, cluster),]
   test_df <- as.data.frame(test)
   try(test_df$neighborhood <- n)
   
@@ -296,7 +297,7 @@ nbh_sf_race <- nbh_sf_df %>%
 
 nbh_sf_race$demo_group <- "Race/Ethnicity"
 
-neighborhood_stop_frisk_age <- new_df %>%
+neighborhood_stop_frisk_age <- nbh_sf_df %>%
   group_by(neighborhood,juvenile) %>%
   summarise (n = n()) %>%
   mutate(freq=n/sum(n)) %>%
@@ -304,7 +305,7 @@ neighborhood_stop_frisk_age <- new_df %>%
   
 neighborhood_stop_frisk_age$demo_group <- "Age"
 
-neighborhood_stop_frisk_demos <- rbind(neighborhood_stop_frisk_age,neighborhood_stop_frisk_race)
+neighborhood_stop_frisk_demos <- rbind(neighborhood_stop_frisk_age,nbh_sf_race)
 
 additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
 
@@ -341,15 +342,15 @@ nbh_sf_demos_census <- merge(neighborhood_stop_frisk_demos,census_data,by.x=c("N
 
 ###################################
 ##
-## Plot neighborhood-level stop and frisk & census data
+## Prep map data for shiny
 ##
 ###################################
 
 nbh_sf_demos_wide <- dcast(nbh_sf_race, neighborhood ~ subgroup , value.var="n")
 
 nbh_sf_demos_wide <- nbh_sf_demos_wide %>%
-                          replace(is.na(.), 0) %>%
-                          mutate(Total = rowSums(.[2:9]))
+  replace(is.na(.), 0) %>%
+  mutate(Total = rowSums(.[2:9]))
 
 additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
 
@@ -358,8 +359,8 @@ nbh_sf_demos_wide <- merge(nbh_sf_demos_wide,additional_cluster_info,by.x="neigh
 poly_df <- as.data.frame(dc_neighborhoods)
 
 poly_df <- merge(nbh_sf_demos_wide,poly_df,
-                          by.x="NAME",
-                          by.y="NAME")
+                 by.x="NAME",
+                 by.y="NAME")
 
 dc_neighborhoods <- dc_neighborhoods[as.numeric(as.character(dc_neighborhoods$OBJECTID)) < 40,]
 row.names(dc_neighborhoods@data) <- NULL
@@ -379,31 +380,15 @@ for (n in names) {
   i <- i + 1
 }
 
-s_poly <- SpatialPolygonsDataFrame(dc_neighborhoods, poly_df,match.ID = FALSE)
+sf_map_shiny <- SpatialPolygonsDataFrame(dc_neighborhoods, poly_df,match.ID = FALSE)
 
-writeOGR(s_poly, ".", "s_poly", driver="ESRI Shapefile",overwrite_layer = TRUE)
+writeOGR(sf_map_shiny, ".", "sf_map_shiny", driver="ESRI Shapefile",overwrite_layer = TRUE)
 
-labels <- sprintf(
-  "<strong>%s</strong><br/>%g ",
-  s_poly$NBH_NAMES, s_poly$Total
-) %>% lapply(htmltools::HTML)
-
-bins <- c(0, 250, 500, 750, 1000, 1250, 1500, 2000, Inf)
-pal <- colorBin("YlOrRd", domain = s_poly$Total, bins = bins)
-
-leaflet(s_poly) %>% addTiles() %>%
-  addPolygons(color = "#444444", weight = 1, smoothFactor = 0.5,
-              opacity = 1.0, fillOpacity = 0.5,
-              fillColor = ~colorQuantile("YlOrRd", Total)(Total),
-              highlightOptions = highlightOptions(color = "white", weight = 2,
-                                                  bringToFront = TRUE),
-              label = labels,
-              labelOptions = labelOptions(
-                style = list("font-weight" = "normal", padding = "3px 8px"),
-                textsize = "15px",
-                direction = "auto")) %>%
-  addLegend(pal = pal, values = ~density, opacity = 0.7, title = NULL,
-            position = "bottomright")
+###################################
+##
+## Plot stop and frisk and census
+##
+###################################
           
 nbh_sf_demos_census$diff <-  (nbh_sf_demos_census$census_value/100) - nbh_sf_demos_census$freq
 

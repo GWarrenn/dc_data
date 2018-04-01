@@ -17,7 +17,6 @@ library(magick)
 
 data <- read.csv(file="data/real_estate/Zip_Zhvi_DC.csv")
 
-
 long <- melt(data, id.vars= c("RegionID","RegionName","City",
                               "State","Metro","CountyName","SizeRank"))
 

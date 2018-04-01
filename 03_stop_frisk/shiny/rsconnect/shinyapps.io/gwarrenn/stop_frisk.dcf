@@ -1,0 +1,12 @@
+name: stop_frisk
+title: stop_frisk
+username:
+account: gwarrenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 312820
+bundleId: 1296450
+url: https://gwarrenn.shinyapps.io/stop_frisk/
+when: 1522559991.92508
+asMultiple: FALSE
+asStatic: FALSE

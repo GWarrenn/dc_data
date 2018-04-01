@@ -1,0 +1,12 @@
+name: shiny
+title: shiny
+username:
+account: gwarrenn
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 312780
+bundleId: 1296374
+url: https://gwarrenn.shinyapps.io/shiny/
+when: 1522552210.28107
+asMultiple: FALSE
+asStatic: FALSE

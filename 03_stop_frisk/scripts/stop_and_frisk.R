@@ -239,22 +239,16 @@ stop_frisk_new$race_ethn[stop_frisk_new$Subject_Ethnicity == "Hispanic Or Latino
 stop_frisk_new$juvenile <- ifelse(stop_frisk_new$Age == "Juvenile","Juvenile","Adult")
 stop_frisk_new$juvenile[stop_frisk_new$Age == "Unknown" | stop_frisk_new$Age == ""] <- "Unknown" 
 
-m = leaflet() %>% addTiles()
-
-m = leaflet(stop_frisk_new) %>% addTiles() %>% 
-  addCircleMarkers(radius =5, 
-  color = stop_frisk_new$race_ethn,
-  stroke = FALSE,
-  fillOpacity = 0.5)
-
 
 ###################################
 ##
-## Matching incidents to neighborhoods using DC neighborhood shapefile 
+## Matching incidents to neighborhoods & census tracts using DC neighborhood shapefile 
 ## provided by DC OpenData
 ## h/t: https://gis.stackexchange.com/questions/133625/checking-if-points-fall-within-polygon-shapefile
 ##
 ###################################
+
+## neighborhoods 
 
 dc_neighborhoods <- readOGR("data/shapefiles",
                             layer="Neighborhood_Clusters")
@@ -283,11 +277,50 @@ for (n in neighborhoods) {
 
 }
 
+## census tracts
+
+dc_census_tracts <- readOGR("data/shapefiles",
+                            layer="Census_Tracts_in_2010")
+
+coordinates(stop_frisk_new) <- ~ LONGITUDE + LATITUDE
+
+tracts <- levels(dc_census_tracts$TRACT)
+
+tracts_sf_df <- data.frame()
+
+for (t in tracts) {
+  
+  print(paste("Classifying stop and frisk incidents in",t))
+  
+  test <- data.frame()
+  
+  tract <- dc_census_tracts[dc_census_tracts$TRACT == t , ]
+  
+  proj4string(stop_frisk_new) <- proj4string(tract)
+  
+  test <- stop_frisk_new[complete.cases(over(stop_frisk_new, tract)), ]
+  test_df <- as.data.frame(test)
+  try(test_df$tract <- t)
+  
+  tracts_sf_df <- rbind(tracts_sf_df,test_df)
+  
+}
+
 ###################################
 ##
-## Calculate race/age breakdowns of stop and frisk at neighborhood level
+## Calculate race/age breakdowns of stop and frisk at neighborhood & tract level
 ##
 ###################################
+
+## neighborhoods
+
+nbh_sf_tot <- nbh_sf_df %>%
+  group_by(neighborhood) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) 
+
+nbh_sf_tot$demo_group <- "Total"
+nbh_sf_tot$subgroup <- "Total"
 
 nbh_sf_race <- nbh_sf_df %>%
   group_by(neighborhood,race_ethn) %>%
@@ -297,19 +330,48 @@ nbh_sf_race <- nbh_sf_df %>%
 
 nbh_sf_race$demo_group <- "Race/Ethnicity"
 
-neighborhood_stop_frisk_age <- nbh_sf_df %>%
+nbh_sf_age <- nbh_sf_df %>%
   group_by(neighborhood,juvenile) %>%
   summarise (n = n()) %>%
   mutate(freq=n/sum(n)) %>%
   rename(subgroup = juvenile)
   
-neighborhood_stop_frisk_age$demo_group <- "Age"
+nbh_sf_age$demo_group <- "Age"
 
-neighborhood_stop_frisk_demos <- rbind(neighborhood_stop_frisk_age,nbh_sf_race)
+nbh_sf_demos <- dplyr::bind_rows(nbh_sf_tot,nbh_sf_age,nbh_sf_race)
 
 additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
 
-neighborhood_stop_frisk_demos <- merge(neighborhood_stop_frisk_demos,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
+nbh_sf_demos <- merge(nbh_sf_demos,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
+
+## tracts
+
+tracts_sf_tot <- tracts_sf_df %>%
+  group_by(tract) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) 
+
+tracts_sf_tot$demo_group <- "Total"
+tracts_sf_tot$subgroup <- "Total"
+
+tracts_sf_race <- tracts_sf_df %>%
+  group_by(tract,race_ethn) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) %>%
+  rename(subgroup = race_ethn)
+
+tracts_sf_race$demo_group <- "Race/Ethnicity"
+
+tracts_sf_age <- tracts_sf_df %>%
+  group_by(tract,juvenile) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) %>%
+  rename(subgroup = juvenile) %>%
+  subset(subgroup %in% c("Juvenile"))
+
+tracts_sf_age$demo_group <- "Age"
+
+tracts_sf_demos <- dplyr::bind_rows(tracts_sf_tot,tracts_sf_age,tracts_sf_race)
 
 ###################################
 ##
@@ -319,17 +381,29 @@ neighborhood_stop_frisk_demos <- merge(neighborhood_stop_frisk_demos,additional_
 
 census_data <- read.csv("data/census/comp_table_cltr00_pop.csv")
 
+census_data_tot <- census_data %>%
+  select(CLUSTER_TR2000,TotPop_2010) %>%
+  melt(id.vars = c("CLUSTER_TR2000"))
+
+census_data_tot$TotPop_2010 <- census_data_tot$value
+
 census_data <- census_data %>%
   select(CLUSTER_TR2000,TotPop_2010,PctPopUnder18Years_2010,
          PctBlackNonHispBridge_2010,PctWhiteNonHispBridge_2010,PctHisp_2010)
 
 census_data <- melt(census_data, id.vars = c("CLUSTER_TR2000","TotPop_2010"))
 
+census_data <- rbind(census_data,census_data_tot)
+
+census_data$pop <- ifelse(census_data$variable == "TotPop_2010",census_data$TotPop_2010,
+                          census_data$TotPop_2010 * (census_data$value/100))
+
 census_data <- census_data %>%
   mutate(variable = recode(census_data$variable, PctPopUnder18Years_2010 = "Juvenile",
                            PctBlackNonHispBridge_2010 = "Black",
                            PctWhiteNonHispBridge_2010 = "White",
-                           PctHisp_2010 = "Hispanic/Latino")) %>%
+                           PctHisp_2010 = "Hispanic/Latino",
+                           TotPop_2010 ="Total")) %>%
   rename(census_value = value)
 
 ###################################
@@ -338,7 +412,7 @@ census_data <- census_data %>%
 ##
 ###################################
 
-nbh_sf_demos_census <- merge(neighborhood_stop_frisk_demos,census_data,by.x=c("NAME","subgroup"),by.y=c("CLUSTER_TR2000","variable"))
+nbh_sf_demos_census <- merge(nbh_sf_demos,census_data,by.x=c("NAME","subgroup"),by.y=c("CLUSTER_TR2000","variable"))
 
 ###################################
 ##
@@ -346,13 +420,11 @@ nbh_sf_demos_census <- merge(neighborhood_stop_frisk_demos,census_data,by.x=c("N
 ##
 ###################################
 
-nbh_sf_demos_wide <- dcast(nbh_sf_race, neighborhood ~ subgroup , value.var="n")
+## neighborhoods
 
-nbh_sf_demos_wide <- nbh_sf_demos_wide %>%
-  replace(is.na(.), 0) %>%
-  mutate(Total = rowSums(.[2:9]))
+nbh_sf_demos_census$adj_arrests_pop <- (nbh_sf_demos_census$n / nbh_sf_demos_census$pop) * 10000
 
-additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
+nbh_sf_demos_wide <- dcast(nbh_sf_demos_census, neighborhood ~ subgroup , value.var=c("n"))
 
 nbh_sf_demos_wide <- merge(nbh_sf_demos_wide,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
 
@@ -382,7 +454,37 @@ for (n in names) {
 
 sf_map_shiny <- SpatialPolygonsDataFrame(dc_neighborhoods, poly_df,match.ID = FALSE)
 
-writeOGR(sf_map_shiny, ".", "sf_map_shiny", driver="ESRI Shapefile",overwrite_layer = TRUE)
+writeOGR(sf_map_shiny, "03_stop_frisk/shiny", "sf_map_shiny", driver="ESRI Shapefile",overwrite_layer = TRUE)
+
+## census tracts
+
+tracts_sf_demos_wide <- dcast(tracts_sf_demos, tract ~ subgroup , value.var="n")
+
+tract_poly_df <- as.data.frame(dc_census_tracts)
+
+tract_poly_df <- merge(tracts_sf_demos_wide,tract_poly_df,
+                 by.x="tract",
+                 by.y="TRACT",all.y = TRUE)
+
+tract_poly_df$OBJECTID <- as.numeric(as.character(tract_poly_df$OBJECTID))
+tract_poly_df <- tract_poly_df[order(as.numeric(as.character(tract_poly_df$OBJECTID))),] 
+
+row.names(tract_poly_df) <- NULL
+row.names(tract_poly_df) <- 0:178
+
+names <- levels(dc_census_tracts$TRACT)
+
+i <- 1
+
+for (n in names) {
+  slot(slot(dc_census_tracts, "polygons")[[i]], "ID") = names[i]
+  i <- i + 1
+}
+
+tract_sf_map_shiny <- SpatialPolygonsDataFrame(dc_census_tracts, tract_poly_df,match.ID = FALSE)
+
+writeOGR(tract_sf_map_shiny, "03_stop_frisk/shiny", "tract_sf_map_shiny", driver="ESRI Shapefile",
+         overwrite_layer = TRUE)
 
 ###################################
 ##

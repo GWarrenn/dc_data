@@ -14,18 +14,26 @@ library(htmltools)
 library(leaflet)
 library(shiny)
 
-vars <- c(
+demo_vars <- c(
   "Total" = "Total",
+  "Juvenile" = "Juvenil",
   "White" = "White",
   "Black" = "Black",
-  "Hispanic/Latino" = "Hispanic/Latino")
+  "Hispanic/Latino" = "Hspnc.L")
+
+geo_vars <- c(
+  "Neighborhood" = "Neighborhood",
+  "Census Tract" = "Census Tract")
 
 bootstrapPage(
   
   tags$style(type = "text/css", "html, body {width:100%;height:100%}"),
   leafletOutput("map", width = "100%", height = "100%"),
   absolutePanel(top = 10, right = 10,
-                selectInput("Race", "Race", vars)
+                selectInput("Geography", "Geography", geo_vars),
+                selectInput("Race", "Race", demo_vars)
+                
+                
   ),
   h2("DC Stop & Frisk 2012-2017")
 )

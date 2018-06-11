@@ -1,6 +1,6 @@
 ## Author: August Warren
 ## Description: Analysis of DC Stop and Frisk Data
-## Date: 3/25/2018
+## Date: 5/22/2018
 ## Status: Draft/Unpublished
 ## Specs: R version 3.3.2 (2016-10-31)
 
@@ -25,6 +25,9 @@ library(ggridges)
 library(lubridate)
 library(fuzzyjoin)
 library(tidyverse)
+library(tweenr)
+
+source("dc_data/03_stop_frisk/mygg_animate.r")
 
 ###################################
 ##
@@ -37,7 +40,7 @@ stop_frisk_1 <- read.xls("data/crime/SF_Field Contact_02202018.xls",sheet = 1)
 
 stop_frisk_1$REASON.FOR.STOP <- "N/A"
 
-stop_frisk_1$time_of_day <- format(strptime(stop_frisk_1$Report_taken_date_EST, "%m/%d/%Y %I:%M %p"), "%H")
+stop_frisk_1$time_of_day <- format(round(strptime(stop_frisk_1$Report_taken_date_EST, "%m/%d/%Y %I:%M %p"), units="hours"), format="%H:%M")
 stop_frisk_1$day_of_month <- format(strptime(stop_frisk_1$Report_taken_date_EST, "%m/%d/%Y %I:%M %p"), "%d")
 stop_frisk_1$month <- format(as.Date(stop_frisk_1$Report_taken_date_EST,"%m/%d/%Y"), "%m")
 stop_frisk_1$year_month <- as.Date(paste0(stop_frisk_1$month,"/","01/",as.numeric(stop_frisk_1$Year),sep=""),"%m/%d/%Y")
@@ -67,7 +70,7 @@ stop_frisk_2 <- stop_frisk_2 %>%
          Incident.Location.District = District,
          Block.Address = Block.address)
 
-stop_frisk_2$time_of_day <- format(strptime(stop_frisk_2$Report_taken_date_EST, "%Y-%m-%d %H:%M"), "%H")
+stop_frisk_2$time_of_day <- format(round(strptime(stop_frisk_2$Report_taken_date_EST, "%Y-%m-%d %H:%M"),units="hours"), "%H:%M")
 stop_frisk_2$day_of_month <- format(strptime(stop_frisk_2$Report_taken_date_EST, "%Y-%m-%d %H:%M"), "%d")
 stop_frisk_2$month <- format(as.Date(stop_frisk_2$Report_taken_date_EST,"%Y-%m-%d"), "%m")
 stop_frisk_2$year_month <- as.Date(paste0(stop_frisk_2$month,"/","01/",as.numeric(as.character(stop_frisk_2$Year)),sep=""),"%m/%d/%Y")
@@ -75,15 +78,6 @@ stop_frisk_2$year_month <- as.Date(paste0(stop_frisk_2$month,"/","01/",as.numeri
 stop_frisk_total <- rbind(stop_frisk_1,stop_frisk_2)
 
 stop_frisk_total$id <- seq.int(nrow(stop_frisk_total))
-
-## when do most stop and frisks occur? -- hourly ts
-
-## where do most stop and frisks occur? -- bar graph of neighborhood
-## what are the most cited reasons for stop and frisk?
-## Add in Police Service area to shiny map
-## Stop & Frisk by time of day by neighborhood racial composition
-## Stop & Frisk incidents by day of month -- are more people frisked at end of the month for quotas
-
 
 ###################################
 ##
@@ -142,9 +136,24 @@ for (e in errors) {
   i <- i + 1
 } 
 
-stop_frisk_total$street_name <- gsub(pattern = "\\\\",
+stop_frisk_total$street_name <- gsub(pattern = "\\\\ |^OF ",
                                      replacement = "",
                                      x = stop_frisk_total$street_name)
+
+## SOUTH/NORTH CAPITOL STREETS HAVE NE/SW/NE/SE BUT NOT IN BLACK CENTROIDS -- DROPPING
+
+quads <- c("NE","NW","SW","SE")
+
+for (q in quads) {
+  
+  cardinals <- c("NORTH","SOUTH")
+  
+  for (cards in cardinals) {
+    stop_frisk_total$street_name <- gsub(pattern = paste(cards," CAPITOL STREET ",q,sep=""),
+                                         replacement = paste(cards," CAPITOL STREET ",sep=""),
+                                         x = stop_frisk_total$street_name)
+  }
+}
 
 # extracting block number from block name
 
@@ -212,6 +221,9 @@ combined$ONSTREETDISPLAY <- ""
 
 stop_frisk_matched <- rbind(combined,second_match,third_match)
 
+unmatched <- third_merge %>%
+  filter(is.na(LATITUDE))
+
 # get lat long of stop & frisk addresses via google maps for remaining ~5,000 unmatched address 
 
 #for(i in 1:nrow(stop_frisk)) {
@@ -247,7 +259,6 @@ stop_frisk_matched$race_ethn[stop_frisk_matched$Subject_Ethnicity == "Hispanic O
 stop_frisk_matched$juvenile <- ifelse(stop_frisk_matched$Age == "Juvenile","Juvenile","Adult")
 stop_frisk_matched$juvenile[stop_frisk_matched$Age == "Unknown" | stop_frisk_matched$Age == ""] <- "Unknown" 
 
-
 ## what are the historical patterns of stop and frisk? -- monthly ts
 
 stop_frisk_monthly <- stop_frisk_total %>%
@@ -275,23 +286,35 @@ monthly_sf <- ggplot(stop_frisk_monthly,aes(x=year_month,y=n,group=1)) +
 
 ggsave(plot = monthly_sf, "03_stop_frisk/images/monthly_sf.png", w = 10.67, h = 8,type = "cairo-png")
 
-## monthly ts by race percentage
+## hourly ts by race percentage
 
-stop_frisk_matched$month <- format(as.Date(stop_frisk_matched$Report_taken_date_EST,"%m/%d/%Y"), "%m")
-stop_frisk_matched$year_month <- as.Date(paste0(stop_frisk_matched$month,"/","01/",as.numeric(stop_frisk_matched$Year),sep=""),"%m/%d/%Y")
-
-stop_frisk_race_monthly <- as.data.frame(stop_frisk_matched) %>%
-  group_by(Year,race_ethn) %>%
+stop_frisk_hourly <- stop_frisk_total %>%
+  filter(!is.na(stop_frisk_total$time_of_day)) %>%
+  group_by(time_of_day) %>%
   summarise (n = n()) %>%
-  mutate(freq = n/sum(n)) %>%
-  filter(race_ethn %in% c("White","Black","Hispanic/Latino","Asian")) 
+  mutate(freq=n/sum(n))
 
-ggplot(stop_frisk_race_monthly, aes(as.Date(Year), freq)) +
-  geom_area(aes(fill = race_ethn)) +
+stop_frisk_hourly$race_ethn <- "Total"
+
+stop_frisk_hourly <- stop_frisk_hourly[c("race_ethn", "time_of_day", "n","freq")]
+
+stop_frisk_hourly_race <- stop_frisk_total %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino")) %>%
+  group_by(race_ethn,time_of_day) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) 
+
+stop_frisk_hourly_comb <- rbind(as.data.frame(stop_frisk_hourly_race),as.data.frame(stop_frisk_hourly))
+
+stop_frisk_hourly_comb_plot <- ggplot(stop_frisk_hourly_comb, aes(x=time_of_day, y=freq, color=race_ethn,group=race_ethn)) + 
+  geom_line(size=2) +
   theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  ylab('Proportion of Stop and Frisk') + xlab("Date")
-#scale_x_date(date_breaks = "6 months", date_labels = "%m/%Y")
+  ylab('Percentage of Stop & Frisk Incidents') + xlab("Time of Day") + ggtitle("Total Stop and Frisk Incidents by Time of Day & Race") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_color_discrete(name="Legend")
+
+ggsave(plot = stop_frisk_hourly_comb_plot, "03_stop_frisk/images/time_of_day_sf.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## average age of stop and frisk by race 
 
@@ -305,9 +328,10 @@ sf_age_race <- stop_frisk_total %>%
 
 sf_age_dist <- ggplot(filter(stop_frisk_total, race_ethn %in% c("White","Black","Hispanic/Latino","Asian")), 
        aes(x = age_numeric, y = race_ethn)) + geom_density_ridges() +
+  theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  xlab("Subject Age") + ylab("Subject Race") + ggtitle("Age of Stop & Frisk Incidents by Race") +
-  theme_fivethirtyeight() 
+  xlab("Subject Age") + ylab("Subject Race") + ggtitle("Age of Stop & Frisk Incidents by Race") 
+  
 
 ggsave(plot = sf_age_dist, "03_stop_frisk/images/sf_age_dist.png", w = 10.67, h = 8,type = "cairo-png")
 
@@ -322,11 +346,19 @@ reasons_for_stop <- stop_frisk_total %>%
   summarise(n = n()) %>%
   mutate(freq = n/sum(n))
 
-ggplot(reasons_for_stop,aes(x=reason, y=freq)) +
+reasons_for_stop$race_ethn <- factor(reasons_for_stop$race_ethn, 
+                                     levels = c("White", "Black", "Hispanic/Latino", "Asian"))
+
+reason_for_stop_plot <- ggplot(reasons_for_stop,aes(x=reason, y=freq)) +
   geom_bar(stat = "identity") + 
-  #coord_flip() +
+  coord_flip() +
+  theme_fivethirtyeight() +
   facet_wrap(~race_ethn) +
-  theme_fivethirtyeight()
+  scale_y_continuous(labels=scales::percent) +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
+  xlab("Reason For Stop") + ylab("") + ggtitle("Reason for Field Contact Report by Race") 
+
+ggsave(plot = reason_for_stop_plot, "03_stop_frisk/images/reason_for_stop.png", w = 10.67, h = 8,type = "cairo-png")
 
 ###################################
 ##
@@ -393,6 +425,57 @@ for (t in tracts) {
   tracts_sf_df <- rbind(tracts_sf_df,test_df)
   
 }
+
+## parks
+
+dc_parks <- readOGR("data/shapefiles",
+                            layer="Parks_and_Recreation_Areas")
+
+dc_parks_centers <- SpatialPointsDataFrame(gCentroid(dc_parks, byid=TRUE), 
+                                      dc_parks@data, match.ID=FALSE)
+
+coordinates(stop_frisk_matched) <- ~ LONGITUDE + LATITUDE
+
+parks <- levels(dc_parks$NAME)
+
+parks_sf_df <- data.frame()
+
+for (p in parks) {
+  
+  print(paste("Classifying stop and frisk incidents in",p))
+  
+  test <- data.frame()
+  
+  park <- dc_parks_centers[dc_parks_centers$NAME == p , ]
+  
+  park <- as.data.frame(park) %>% slice(1)
+  
+  park_lat_long <- c(park$x,park$y)
+  
+  stop_frisk_matched_df <- as.data.frame(stop_frisk_matched)
+
+  parks_matched = stop_frisk_matched_df %>% 
+    mutate(distanceFromCentre = by(stop_frisk_matched_df, 1:nrow(stop_frisk_matched_df), function(row) { 
+      (distHaversine(c(row$ï..X,row$Y), park_lat_long) / 1609) * 5280 })) %>%
+    filter(distanceFromCentre < 500)
+  
+  parks_sf_df <- rbind(parks_sf_df,parks_matched)
+  
+}
+
+dc_parks_centers_df <- as.data.frame(dc_parks_centers)
+
+combined <- merge(stop_frisk_matched_df,dc_parks_centers_df,by=NULL)
+
+combined$distance <- distHaversine(combined[20:21],combined[119:120]) / 1609
+combined$distance <- combined$distance * 5280 #convert to feet
+
+combined <- combined %>%
+  filter(distance<100)
+
+stops_by_parks <- combined %>%
+  group_by(NAME) %>%
+  summarise(sf=n())
 
 ###################################
 ##
@@ -504,86 +587,18 @@ nbh_sf_demos_census <- merge(nbh_sf_demos,census_data,by.x=c("NAME","subgroup"),
 
 ###################################
 ##
-## Prep map data for shiny
-##
-###################################
-
-## neighborhoods
-
-nbh_sf_demos_census$adj_arrests_pop <- (nbh_sf_demos_census$n / nbh_sf_demos_census$pop) * 100
-
-nbh_sf_demos_wide <- dcast(nbh_sf_demos_census, neighborhood ~ subgroup , value.var=c("n"))
-nbh_sf_demos_wide_adj <- dcast(nbh_sf_demos_census, neighborhood ~ subgroup , value.var=c("adj_arrests_pop"))
-
-nbh_sf_demos_wide <- merge(nbh_sf_demos_wide,nbh_sf_demos_wide_adj,by = "neighborhood",suffixes=c("_unadj","_adj"))
-
-nbh_sf_demos_wide <- merge(nbh_sf_demos_wide,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
-
-poly_df <- as.data.frame(dc_neighborhoods)
-
-poly_df <- merge(nbh_sf_demos_wide,poly_df,
-                 by.x="NAME",
-                 by.y="NAME")
-
-dc_neighborhoods <- dc_neighborhoods[as.numeric(as.character(dc_neighborhoods$OBJECTID)) < 40,]
-row.names(dc_neighborhoods@data) <- NULL
-row.names(dc_neighborhoods@data) <- as.character(dc_neighborhoods$NBH_NAMES)
-
-poly_df <- poly_df[order(as.numeric(as.character(poly_df$OBJECTID))),] 
-
-row.names(poly_df) <- NULL
-row.names(poly_df) <- 0:38
-
-names <- levels(dc_neighborhoods$NBH_NAMES)
-
-i <- 1
-
-for (n in names) {
-  slot(slot(dc_neighborhoods, "polygons")[[i]], "ID") = names[i]
-  i <- i + 1
-}
-
-sf_map_shiny <- SpatialPolygonsDataFrame(dc_neighborhoods, poly_df,match.ID = FALSE)
-
-writeOGR(sf_map_shiny, "03_stop_frisk/shiny", "sf_map_shiny", driver="ESRI Shapefile",overwrite_layer = TRUE)
-
-## census tracts
-
-tracts_sf_demos_wide <- dcast(tracts_sf_demos, tract ~ subgroup , value.var="n")
-
-tract_poly_df <- as.data.frame(dc_census_tracts)
-
-tract_poly_df <- merge(tracts_sf_demos_wide,tract_poly_df,
-                 by.x="tract",
-                 by.y="TRACT",all.y = TRUE)
-
-tract_poly_df$OBJECTID <- as.numeric(as.character(tract_poly_df$OBJECTID))
-tract_poly_df <- tract_poly_df[order(as.numeric(as.character(tract_poly_df$OBJECTID))),] 
-
-row.names(tract_poly_df) <- NULL
-row.names(tract_poly_df) <- 0:178
-
-names <- levels(dc_census_tracts$TRACT)
-
-i <- 1
-
-for (n in names) {
-  slot(slot(dc_census_tracts, "polygons")[[i]], "ID") = names[i]
-  i <- i + 1
-}
-
-tract_sf_map_shiny <- SpatialPolygonsDataFrame(dc_census_tracts, tract_poly_df,match.ID = FALSE)
-
-writeOGR(tract_sf_map_shiny, "03_stop_frisk/shiny", "tract_sf_map_shiny", driver="ESRI Shapefile",
-         overwrite_layer = TRUE)
-
-###################################
-##
 ## Plot stop and frisk and census
 ##
 ###################################
 
 # overall neighborhood stop and frisk 
+
+nbh_sf_totals_census_adj <- nbh_sf_demos_census %>%
+  filter(demo_group == "Total") %>%
+  mutate(adj_sf = (n/pop) * 10000,
+         group = 1:39) %>%
+  select(group,adj_sf) %>%
+  rename(value = adj_sf)
 
 nbh_names <- nbh_sf_demos_census %>%
   filter(demo_group == "Total") %>%
@@ -598,15 +613,6 @@ nbh_sf_totals_census <- nbh_sf_demos_census %>%
          #group = neighborhood)
 
 nbh_sf_totals_census$frame <- 1
-
-nbh_sf_totals_census_adj <- nbh_sf_demos_census %>%
-  filter(demo_group == "Total") %>%
-  mutate(adj_sf = (n/pop) * 10000,
-         group = 1:nrow(nbh_sf_totals_census_adj)) %>%
-  select(group,adj_sf) %>%
-  rename(value = adj_sf)
-         #group = neighborhood)
-
 nbh_sf_totals_census_adj$frame <- 2
 
 # Interpolate data with tweenr
@@ -622,8 +628,6 @@ tf <- merge(tf,nbh_names,by="group")
 tf <- merge(tf,init_sort,by="group")
 
 ## h/t to: https://stackoverflow.com/questions/45569659/plot-titles-when-using-gganimate-with-tweenr
-
-source("mygg_animate.r")
 
 tf$type <- ifelse(tf$frame > 1.5,"per 10,000 people","")
 
@@ -797,7 +801,6 @@ coordinates(stop_frisk_matched) <- ~ LONGITUDE + LATITUDE
 years = c(2012,2013,2014,2015,2016)
 
 crime_all_years = data.frame()
-crime_tracts_all_years <- data.frame()
 
 for (y in years) {
   
@@ -810,7 +813,7 @@ for (y in years) {
   
   for (n in neighborhoods) {
     
-    print(paste("Classifying arrests incidents in",n))
+    print(paste("Classifying crimes incidents in",n))
     
     test <- data.frame()
     
@@ -832,53 +835,25 @@ for (y in years) {
   
   crime_neighborhood <- new_df %>%
     group_by(neighborhood,year_month) %>%
-    summarise(arrests = n())
+    summarise(crime = n())
   
   crime_neighborhood$year <- y
   
   crime_all_years <- rbind(crime_all_years,as.data.frame(crime_neighborhood))
   
-  ## crime by tract
-  
-  tracts <- levels(dc_census_tracts$TRACT)
-  
-  tracts_arrests_df <- data.frame()
-  
-  for (t in tracts) {
-    
-    test <- data.frame()
-    
-    tract <- dc_census_tracts[dc_census_tracts$TRACT == t , ]
-    
-    proj4string(crime) <- proj4string(tract)
-    
-    test <- crime[complete.cases(over(crime, tract)), ]
-    test_df <- as.data.frame(test)
-    try(test_df$tract <- t)
-    
-    tracts_arrests_df <- rbind(tracts_arrests_df,test_df)
-    
-  }
-  
-  tracts_arrests_df$month <- format(as.Date(tracts_arrests_df$REPORT_DAT,"%Y-%m-%d"), "%m")
-  tracts_arrests_df$Year <- format(as.Date(tracts_arrests_df$REPORT_DAT,"%Y-%m-%d"), "%Y")
-  tracts_arrests_df$year_month <- as.Date(paste0(tracts_arrests_df$month,"/","01/",as.numeric(tracts_arrests_df$Year),sep=""),"%m/%d/%Y")
-  
-  crime_tracts <- tracts_arrests_df %>%
-    group_by(tract,year_month) %>%
-    summarise(crimes = n())
-  
-  crime_tracts_all_years <- rbind(crime_tracts_all_years,as.data.frame(crime_tracts))
-
 }
 
 crime_total_years_all_dc <- crime_all_years %>%
   group_by(year) %>%
-  summarise(total_arrests = sum(arrests))
+  summarise(total_crime = sum(crime))
 
 crime_avg_years <- crime_all_years %>%
+  group_by(year,neighborhood) %>%
+  summarise(tot_crime_yr = sum(crime))
+
+crime_avg_years <- crime_avg_years %>%
   group_by(neighborhood) %>%
-  summarise(avg_arrests = mean(arrests))
+  summarise(crime = mean(tot_crime_yr))
 
 ## By year
 
@@ -891,21 +866,10 @@ nbh_sf_yearly$prev_year <- as.numeric(as.character(nbh_sf_yearly$Year)) - 1
 nbh_sf_yearly <- merge(nbh_sf_yearly,crime_all_years,
                         by.x = c("neighborhood","prev_year"),
                         by.y = c("neighborhood","year"))
-## By month
-
-nbh_sf_monthly <- nbh_sf_df %>%
-  group_by(neighborhood,year_month) %>%
-  summarise (stop_frisks = n()) 
-
-nbh_sf_monthly <- merge(nbh_sf_monthly,crime_all_years,
-                       by.x = c("neighborhood","year_month"),
-                       by.y = c("neighborhood","year_month"))
-
-nbh_sf_monthly <- nbh_sf_monthly %>% mutate(prev_year_crime = lag(arrests))
 
 ## relationship between previous year in crime and current year stop and frisk
 
-crime_frisk_yearly <- ggplot(data=nbh_sf_yearly,aes(x=stop_frisks,y=arrests)) + 
+crime_frisk_yearly <- ggplot(data=nbh_sf_yearly,aes(x=stop_frisks,y=crime)) + 
   geom_point() + 
   geom_smooth(method='glm',formula=y~x) +
   theme_fivethirtyeight() +
@@ -920,7 +884,7 @@ ggsave(plot = crime_frisk_yearly, "03_stop_frisk/images/crime_frisks.png", w = 1
 nbh_sf_avg <- nbh_sf_yearly %>%
   group_by(neighborhood) %>%
   summarise(avg_sf = mean(stop_frisks),
-            avg_prev_yr_crime = mean(arrests))
+            avg_prev_yr_crime = mean(crime))
 
 par(mfrow=c(2,2)) 
 
@@ -935,6 +899,8 @@ nbh_sf_avg$non_white_bins <-cut(nbh_sf_avg$pct_non_white, c(0,10,20,30,40,50,60,
 
 yearly_model <- lm(formula = avg_sf ~ avg_prev_yr_crime,
    data = nbh_sf_avg)
+
+stargazer(yearly_model,align = TRUE, out="03_stop_frisk/images/models.htm")
 
 nbh_sf_avg$predicted <- predict(yearly_model)
 nbh_sf_avg$residuals <- residuals(yearly_model)
@@ -976,12 +942,12 @@ avg_sf_nbh_race <- total_sf_nbh_race %>%
   group_by(non_white_bins) %>%
   summarise (avg_sf = mean(sf))
 
-crime_w_census <- merge(crime_all_years,additional_cluster_info,by.y="NBH_NAMES",by.x="neighborhood")
+crime_w_census <- merge(crime_avg_years,additional_cluster_info,by.y="NBH_NAMES",by.x="neighborhood")
 crime_w_census <- merge(crime_w_census,census_data_original,by.x="NAME",by.y="CLUSTER_TR2000")
 
 crime_w_census <- crime_w_census %>%
   select(NAME,neighborhood,PctBlackNonHispBridge_2010,PctHisp_2010,
-         PctAsianPINonHispBridge_2010,TotPop_2010,arrests)
+         PctAsianPINonHispBridge_2010,TotPop_2010,crime)
 
 crime_w_census$pct_non_white <- crime_w_census$PctAsianPINonHispBridge_2010 + 
   crime_w_census$PctBlackNonHispBridge_2010 +
@@ -989,137 +955,265 @@ crime_w_census$pct_non_white <- crime_w_census$PctAsianPINonHispBridge_2010 +
 
 crime_w_census$non_white_bins <-cut(crime_w_census$pct_non_white, c(0,10,20,30,40,50,60,70,80,90,100))
 
-arrests_w_census <- crime_w_census %>%
+crime_w_census <- crime_w_census %>%
   group_by(non_white_bins) %>%
-  summarise (arrests = mean(arrests),pop=mean(TotPop_2010))
+  summarise (crime = mean(crime),pop=mean(TotPop_2010))
 
-arrests_sf_race_bins <- merge(arrests_w_census,avg_sf_nbh_race,by="non_white_bins")
+crime_sf_race_bins <- merge(crime_w_census,avg_sf_nbh_race,by="non_white_bins")
 
-arrests_sf_race_bins$adj_sf <- (arrests_sf_race_bins$avg_sf / arrests_sf_race_bins$pop) * 100
-arrests_sf_race_bins$adj_arrest <- (arrests_sf_race_bins$arrests / arrests_sf_race_bins$pop) * 100
+crime_sf_race_bins$adj_sf <- (crime_sf_race_bins$avg_sf / crime_sf_race_bins$pop) * 100
+crime_sf_race_bins$adj_crime <- (crime_sf_race_bins$crime / crime_sf_race_bins$pop) * 100
 
-arrests_sf_race_l <- melt(arrests_sf_race_bins, id.vars=c("non_white_bins")) %>%
-  subset(variable %in% c("adj_sf","adj_arrest"))
+crime_sf_race_l <- melt(crime_sf_race_bins, id.vars=c("non_white_bins")) %>%
+  subset(variable %in% c("adj_sf","adj_crime"))
 
-sf_arrests_nbh_race <- ggplot(arrests_sf_race_l,aes(x=as.numeric(non_white_bins)*10,y=value,color=variable,group=as.character(variable))) + 
+sf_crime_nbh_race <- ggplot(crime_sf_race_l,aes(x=as.numeric(non_white_bins)*10,y=value,color=variable,group=as.character(variable))) + 
   geom_line(size=2) +
   theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  ylab('Arrests/Stop & Frisk per 100 people') + xlab("Neighborhood Percent of Residents of Color") + 
-  ggtitle("Average Yearly Stop & Frisk/Arrests by \nNeighborhood Percentage of Residents of Color") 
+  ylab('Crime/Stop & Frisk per 100 people') + xlab("Neighborhood Percent of Residents of Color") + 
+  ggtitle("Average Yearly Stop & Frisk/Crime by \nNeighborhood Percentage of Residents of Color") 
 
-ggsave(plot = sf_arrests_nbh_race, "03_stop_frisk/images/sf_arrests_nbh_race.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = sf_crime_nbh_race, "03_stop_frisk/images/sf_crime_nbh_race.png", w = 10.67, h = 8,type = "cairo-png")
 
-## calculating average time of "nearest" crime
+## Arrest data
 
-sf_2016 <- as.data.frame(stop_frisk_matched) %>%
-  filter(as.numeric(as.character(Year)) >= 2016)
+arrests <- read.csv("data/crime/arrest_charges_anon.csv",stringsAsFactors = F)
 
-sf_2016$Report_taken_date_EST <- gsub(pattern = "/16",replacement = "/2016",x = sf_2016$Report_taken_date_EST)
-sf_2016$sf_posix_datetime <- as.POSIXct(strptime(sf_2016$Report_taken_date_EST, "%m/%d/%Y %I:%M %p"))
+arrests <- arrests %>% filter(!is.na(latitude))
 
-sf_2016$id <- seq.int(nrow(sf_2016))
+dc_neighborhoods <- readOGR("data/shapefiles",
+                            layer="Neighborhood_Clusters")
 
-sf_2016 <- sf_2016 %>%
-  rename(LONGITUDE.y = ï..X)
+coordinates(arrests) <- ~ longitude + latitude
 
-crime_data <- readOGR("data/shapefiles/Crime_Incidents_in_2016.shp",
-                 layer="Crime_Incidents_in_2016")
+neighborhoods <- levels(dc_neighborhoods$NBH_NAMES)
 
-crime_data <- as.data.frame(crime_data)
+nbh_arrests_df <- data.frame()
 
-crime_data$REPORT_DAT <- gsub("T"," ",crime_data$REPORT_DAT)
+for (n in neighborhoods) {
+  
+  print(paste("Classifying stop and frisk incidents in",n))
+  
+  test <- data.frame()
+  
+  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == n , ]
+  
+  proj4string(arrests) <- proj4string(cluster)
+  
+  test <- arrests[complete.cases(over(arrests, cluster)), ]
+  test_df <- as.data.frame(test)
+  try(test_df$neighborhood <- n)
+  
+  nbh_arrests_df <- rbind(nbh_arrests_df,test_df)
+  
+}
 
-crime_data$clean_date <- strftime(crime_data$REPORT_DAT, "%Y-%m-%d %H:%M:%S")
-crime_data$month <- format(as.Date(crime_data$REPORT_DAT,"%Y-%m-%d %H:%M:%S"), "%m")
+## pulling in neighborhood-level census
 
-crime_data$arrest_posix_datetime <- as.POSIXct(strptime(crime_data$REPORT_DAT, "%Y-%m-%d %H:%M:%S"))
+census_nbh_pct_black <- census_data %>%
+  filter(variable == "Black")
 
-fuzzy <- geo_inner_join(sf_2016,crime_data, by = c("LONGITUDE","LATITUDE"), 
-                        method = "haversine", max_dist = .5,
-                        unit = c("miles"))
+census_nbh_pct_black$bins <- cut(census_nbh_pct_black$census_value, c(0,10,40,60,80,100))
 
-fuzzy$time_diff <- difftime(fuzzy$sf_posix_datetime,
-                            fuzzy$arrest_posix_datetime,
-                            units="mins")
+nbh_arrests_df$race_ethn <- ifelse(as.character(nbh_arrests_df$ethnicity)=='Hispanic Or Latino','Hispanic/Latino',
+                                      as.character(nbh_arrests_df$race))
 
-fuzzy <- fuzzy[ , !duplicated(colnames(fuzzy))]
+nbh_arrests_df$race_ethn[nbh_arrests_df$ethnicity == "Hispanic Or Latino"] <- "Hispanic/Latino" 
 
-fuzzy <- fuzzy %>%
-  filter(time_diff >= 0)
+## calculate neighborhood-level arrests by race
 
-fuzzy$distance <- distHaversine(fuzzy[, 20:21],  fuzzy[, 45:44]) / 1609
-fuzzy$distance <- fuzzy$distance * 5280 #convert to feet
+arrests_by_race_nbh <- nbh_arrests_df %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise(arrests=n()) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
 
-closest_crimes <- fuzzy %>% group_by(id) %>% arrange(time_diff,distance) %>% slice(1)
+## calculate neighborhood-level stop and firsks by race
 
-mean_by_race <- closest_crimes %>%
-  group_by(race_ethn) %>%
-  summarise(mean = sum((mean(time_diff)/60)))
+stops_by_race_nbh <- nbh_sf_df %>%
+  filter(Year == 2016) %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise(stop_frisks=n()) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
 
-closes_crime_plot <- ggplot(closest_crimes,aes(x=as.numeric((time_diff)/60))) +
-  geom_histogram(bins = 100) +
-  geom_vline(xintercept = mean(as.numeric((closest_crimes$time_diff)/60))) +
-  labs(x="Hours",y="Frequency") +
-  ggtitle("Hours Before Stop & Frisk of Closest Reported Crime") +
-  theme_fivethirtyeight() +
-  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) +
-  scale_x_continuous(limits = c(0,150))
+## merge arrests & stop and frisk then census
 
-ggsave(plot = closest_crime, "03_stop_frisk/images/closes_crime_plot.png", w = 10.67, h = 8,type = "cairo-png")
+stops_arrests_nbh <- merge(arrests_by_race_nbh,stops_by_race_nbh,by=c("neighborhood","race_ethn"),
+                              all = T)
 
+additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
 
-# %15 of all stop & frisk incidents occured within an hour of crime incident 
+stops_arrests_nbh <- merge(stops_arrests_nbh,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
 
-## Census Tract -- FACTOR IN POPULATION
+stops_arrests_tracts_nbh <- merge(stops_arrests_nbh,census_nbh_pct_black,by.x="NAME",by.y="CLUSTER_TR2000")
 
-sf_monthly_tracts <- tracts_sf_df %>%
-  group_by(tract,year_month) %>%
-  summarise(stop_frisk=n()) 
+stops_arrests_tracts_nbh$adj_sf <- (stops_arrests_tracts_nbh$stop_frisks / stops_arrests_tracts_nbh$pop) * 100
+stops_arrests_tracts_nbh$adj_arrests <- (stops_arrests_tracts_nbh$arrests / stops_arrests_tracts_nbh$pop) * 100
 
-sf_arrests_monthly_tracts <- merge(sf_monthly_tracts,crime_tracts_all_years,by=c("tract","year_month"))
+## roll up neighborhoods and aggregate stop & frisk and arrests based on racial bins
 
-sf_arrests_monthly_tracts <- complete(sf_arrests_monthly_tracts,tract,year_month)
+stops_arrests_nbh_census_bins <- stops_arrests_tracts_nbh %>%
+  replace(is.na(.), 0) %>%
+  group_by(bins,race_ethn) %>%
+  summarise(total_arrests = sum(adj_arrests),
+            total_sf = sum(adj_sf))
 
-sf_arrests_monthly_tracts[is.na(sf_arrests_monthly_tracts)] <- 0
+## calculate arest to stop & frisk ratio
 
-sf_arrests_month_avg <- sf_arrests_monthly_tracts %>%
-  group_by(year_month) %>%
-  summarise(avg_crime = mean(crimes),
-            avg_sf = mean(stop_frisk))
+stops_arrests_nbh_census_bins$arrest_to_stops <- stops_arrests_nbh_census_bins$total_sf /
+  stops_arrests_nbh_census_bins$total_arrests
 
-sf_arrests_month_avg <- sf_arrests_month_avg %>%
-  #group_by(tract) %>%
-  #mutate(rolling_sf = cumsum(stop_frisk),
-  #       rolling_crimes = cumsum(crimes)) %>%
-  #mutate(sf_moving_avg = rollmean(avg_sf, k = 6, na.pad = TRUE, align = "right"),
-  #       crimes_moving_avg = rollmean(avg_crime, k = 6, na.pad = TRUE, align = "right")) %>%
-  mutate(lagged_sf = lag(avg_sf,5)) %>%
-  mutate(sf_arrests = avg_crime-lagged_sf)
-
-sf_arrests_monthly_tracts <- sf_arrests_monthly_tracts[is.finite(rowSums(as.numeric(as.character(sf_arrests_monthly_tracts)))),]
-
-#sf_arrests_monthly_tracts <- merge(sf_arrests_monthly_tracts,as.data.frame(dc_census_tracts),
-#                                   by.x ="tract",by.y="TRACT")
-
-#sf_arrests_monthly_tracts$poc_pct <- 1 - ((as.numeric(as.character(sf_arrests_monthly_tracts$P0010003))) / 
-#                                        (as.numeric(as.character(sf_arrests_monthly_tracts$P0010001)))) 
-
-#sf_arrests_monthly_tracts$poc_pct_bins <-cut(sf_arrests_monthly_tracts$poc_pct, c(0,.3,.7,1))
-
-#sf_arrests_month_avg <- sf_arrests_monthly_tracts %>%
-#  group_by(poc_pct_bins,year_month) %>%
-#  summarise(avg_crime = mean(crimes_moving_avg),
-#            avg_sf = mean(sf_moving_avg))
-
-sf_arrests_month_avg_l <- melt(sf_arrests_month_avg,id.vars = c("year_month"))
-
-ggplot(filter(sf_arrests_month_avg_l,variable=="sf_arrests"),aes(x=as.Date(year_month),y=value,color=as.character(variable),group=as.character(variable))) + 
+stops_arrest_ratio <- ggplot(stops_arrests_nbh_census_bins,aes(x=bins,y=arrest_to_stops,color=race_ethn,group=as.character(race_ethn))) + 
   geom_line(size=2) +
   theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  ylab('Average Number of Stop & Frisk Incidents') + xlab("Date") + 
-  ggtitle("Average Census Tract Stop & Frisk/Arrests") 
+  ylab('Stops to Arrests Ratio') + xlab("Neighborhood Racial Composition") + 
+  scale_x_discrete(labels = c("< 10% black","10 - 40% black","40 - 60% black","> 60% black","80 - 100% black")) +
+  scale_color_discrete(name="Legend") +
+  scale_y_continuous(limits = c(0,2.5)) +
+  ggtitle("Stop & Frisk to Arrest Ratio (2016 Only)")
 
+ggsave(plot = stops_arrest_ratio, "03_stop_frisk/images/stops_arrest_ratio.png", w = 10.67, h = 8,type = "cairo-png")
 
+## crime data w/ race
+
+crimes_race <- read.csv("data/crime/crimes_anon.csv",stringsAsFactors = F)
+
+crimes_race <- crimes_race %>% filter(!is.na(longitude))
+
+dc_neighborhoods <- readOGR("data/shapefiles",
+                            layer="Neighborhood_Clusters")
+
+coordinates(crimes_race) <- ~ longitude + latitude
+
+neighborhoods <- levels(dc_neighborhoods$NBH_NAMES)
+
+nbh_crimes_df <- data.frame()
+
+for (n in neighborhoods) {
+  
+  print(paste("Classifying crimes incidents in",n))
+  
+  test <- data.frame()
+  
+  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == n , ]
+  
+  proj4string(crimes_race) <- proj4string(cluster)
+  
+  test <- crimes_race[complete.cases(over(crimes_race, cluster)), ]
+  test_df <- as.data.frame(test)
+  try(test_df$neighborhood <- n)
+  
+  nbh_crimes_df <- rbind(nbh_crimes_df,test_df)
+  
+}
+
+## pulling in neighborhood-level census
+
+census_nbh_pct_black <- census_data %>%
+  filter(variable == "Black")
+
+census_nbh_pct_black$bins <- cut(census_nbh_pct_black$census_value, c(0,10,40,60,80,100))
+
+nbh_crimes_df$race_ethn <- ifelse(as.character(nbh_crimes_df$ethnicity)=='Hispanic Or Latino','Hispanic/Latino',
+                                   as.character(nbh_crimes_df$race))
+
+nbh_crimes_df$race_ethn[nbh_crimes_df$ethnicity == "Hispanic Or Latino"] <- "Hispanic/Latino" 
+
+## calculate neighborhood-level crimes by race
+
+crimes_by_race_nbh <- nbh_crimes_df %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise(crimes=n()) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
+
+## calculate neighborhood-level stop and firsks by race
+
+stops_by_race_nbh <- nbh_sf_df %>%
+  filter(Year == 2016) %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise(stop_frisks=n()) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
+
+## merge arrests & stop and frisk then census
+
+stops_crimes_nbh <- merge(crimes_by_race_nbh,stops_by_race_nbh,by=c("neighborhood","race_ethn"),
+                           all = T)
+
+additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
+
+stops_crimes_nbh <- merge(stops_crimes_nbh,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
+
+stops_crimes_tracts_nbh <- merge(stops_crimes_nbh,census_nbh_pct_black,by.x="NAME",by.y="CLUSTER_TR2000")
+
+stops_crimes_tracts_nbh$adj_sf <- (stops_crimes_tracts_nbh$stop_frisks / stops_crimes_tracts_nbh$pop) * 100
+stops_crimes_tracts_nbh$adj_crimes <- (stops_crimes_tracts_nbh$crimes / stops_crimes_tracts_nbh$pop) * 100
+
+## roll up neighborhoods and aggregate stop & frisk and arrests based on racial bins
+
+stops_crimes_nbh_census_bins <- stops_crimes_tracts_nbh %>%
+  replace(is.na(.), 0) %>%
+  group_by(bins,race_ethn) %>%
+  summarise(total_crimes = sum(adj_crimes),
+            total_sf = sum(adj_sf))
+
+## calculate crime to stop & frisk ratio
+
+stops_crimes_nbh_census_bins$arrest_to_stops <- stops_crimes_nbh_census_bins$total_sf /
+  stops_crimes_nbh_census_bins$total_crimes
+
+stops_crimes_ratio <- ggplot(stops_crimes_nbh_census_bins,aes(x=bins,y=arrest_to_stops,color=race_ethn,group=as.character(race_ethn))) + 
+  geom_line(size=2) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
+  ylab('Stop & Frisk to Crimes Ratio') + xlab("Neighborhood Racial Composition") + 
+  scale_x_discrete(labels = c("< 10% black","10 - 40% black","40 - 60% black","> 60% black","80 - 100% black")) +
+  scale_color_discrete(name="Legend") +
+  #scale_y_continuous(limits = c(0,2.5)) +
+  ggtitle("Stop & Frisk to Crimes Ratio (2016 Only)")
+
+ggsave(plot = stops_crimes_ratio, "03_stop_frisk/images/stops_crimes_ratio.png", w = 10.67, h = 8,type = "cairo-png")
+
+## re-creating stop and frisk by neighborhood percent using crime instead
+
+nbh_crimes_race <- nbh_crimes_df %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise (crime_n = n()) %>%
+  mutate(crime_freq=crime_n/sum(crime_n)) %>%
+  rename(subgroup = race_ethn)
+
+nbh_crime_race <- merge(nbh_crimes_race,nbh_sf_race,by=c("neighborhood","subgroup"),all=T)
+
+nbh_crime_race <- nbh_crime_race %>%
+  replace(., is.na(.), 0)
+
+nbh_crime_sf_race_scatter <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("White","Black","Hispanic/Latino")),aes(x=freq,y=crime_freq)) + 
+  geom_point(aes(size=n,color=subgroup)) + 
+  scale_x_continuous(limits = c(0, 1),labels = scales::percent) + 
+  scale_y_continuous(limits = c(0, 1.0),labels = scales::percent) + 
+  geom_abline(intercept = 0,slope = 1) + 
+  geom_hline(yintercept = .5) + geom_vline(xintercept = .5) +
+  theme_fivethirtyeight() +
+  labs(x = "Percent of Stop and Frisk", y = "Percent of Crime") +
+  ggtitle("Neighborhood Crime v. Stop & Frisk") +
+  theme(plot.title = element_text(hjust = 0.5),axis.title = element_text()) 
+
+ggsave(plot = nbh_crime_sf_race_scatter, "03_stop_frisk/images/nbh_crime_sf_race_scatter.png", w = 10.67, h = 10.67,type = "cairo-png")
+
+nbh_crime_race$diff <-  (nbh_crime_race$crime_freq) - nbh_crime_race$freq
+
+nbh_diff_crimes <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("White","Black","Hispanic/Latino")), 
+                        aes(x = reorder(neighborhood, diff), 
+                            y = as.numeric(diff))) + 
+  geom_point(aes(size=n,color=subgroup),stat='identity') + coord_flip() +
+  ggtitle("Neighborhood Difference in Stop & Frisk Rate & Crime Rate by Race (2016)") + 
+  geom_hline(yintercept = 0) +
+  theme_fivethirtyeight() +
+  labs(x = "Neighborhood", y = "Stop & Frisk - Population") +
+  theme(plot.title = element_text(hjust = 0.5),text = element_text(size=10)) +
+  scale_y_continuous(labels=scales::percent) +
+  guides(color=guide_legend(title="Race/Ethnicity"),
+         size=guide_legend(title="Total Stop & Frisk")) 
+
+ggsave(plot = nbh_diff_crimes, "03_stop_frisk/images/13_nbh_diff_crimes.png", w = 10.67, h = 8,type = "cairo-png")
 

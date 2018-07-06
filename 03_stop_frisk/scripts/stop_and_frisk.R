@@ -26,8 +26,10 @@ library(lubridate)
 library(fuzzyjoin)
 library(tidyverse)
 library(tweenr)
+library(scales)
 
-source("dc_data/03_stop_frisk/mygg_animate.r")
+
+source("03_stop_frisk/scripts/mygg_animate.r")
 
 ###################################
 ##
@@ -351,14 +353,59 @@ reasons_for_stop$race_ethn <- factor(reasons_for_stop$race_ethn,
 
 reason_for_stop_plot <- ggplot(reasons_for_stop,aes(x=reason, y=freq)) +
   geom_bar(stat = "identity") + 
+  geom_text(aes(label=percent(round(freq,2))), 
+            hjust=-.1, position=position_dodge(.5)) +
   coord_flip() +
   theme_fivethirtyeight() +
   facet_wrap(~race_ethn) +
-  scale_y_continuous(labels=scales::percent) +
+  scale_y_continuous(labels=scales::percent,limits=c(0,.5)) +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
   xlab("Reason For Stop") + ylab("") + ggtitle("Reason for Field Contact Report by Race") 
 
 ggsave(plot = reason_for_stop_plot, "03_stop_frisk/images/reason_for_stop.png", w = 10.67, h = 8,type = "cairo-png")
+
+stop_frisk_total$contact_type <- ifelse(stop_frisk_total$REASON.FOR.STOP=="N/A","Forcible","Non-forcible")
+
+race_contact <- stop_frisk_total %>%
+  group_by(contact_type,race_ethn) %>%
+  summarise(n=n()) %>%
+  mutate(freq=n/sum(n)) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
+
+race_contact_plot <- ggplot(race_contact,aes(x=race_ethn, y=freq,fill=race_ethn)) +
+  geom_bar(stat="identity") + 
+  geom_text(aes(label=percent(freq)), 
+            vjust=-.5, position=position_dodge(.5), size=5) +
+  theme_fivethirtyeight() +
+  facet_grid(~contact_type) +
+  scale_y_continuous(labels=scales::percent,limits=c(0,1)) +
+  scale_x_discrete(limits=c("White","Black","Hispanic/Latino")) +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
+  xlab("") + ylab("") + ggtitle("Subject Race/Ethnicity by Contact Type")+
+  scale_fill_discrete(name="Legend",limits=c("White","Black","Hispanic/Latino")) 
+
+ggsave(plot = race_contact_plot, "03_stop_frisk/images/race_contact.png", w = 10.67, h = 8,type = "cairo-png")
+
+gender_race <- stop_frisk_total %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino")) %>%
+  group_by(race_ethn,contact_type,Subject_Sex) %>%
+  summarise(n=n()) %>%
+  mutate(freq=n/sum(n))
+
+gender_race_plot <- ggplot(gender_race,aes(x=Subject_Sex, y=freq,fill=Subject_Sex)) +
+  geom_bar(stat="identity") + 
+  geom_text(aes(label=percent(freq)), 
+            vjust=-.5, position=position_dodge(.5), size=5) +
+  theme_fivethirtyeight() +
+  facet_grid(contact_type ~ race_ethn) +
+  scale_y_continuous(labels=scales::percent,limits=c(0,1)) +
+  scale_x_discrete(limits=c("Male","Female","Unknown")) +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
+  xlab("") + ylab("") + ggtitle("Subject Sex by Race/Ethnicity & Contact Type")+
+  scale_fill_discrete(name="Legend",limits=c("Male","Female","Unknown")) 
+
+ggsave(plot = gender_race_plot, "03_stop_frisk/images/gender_race_contact.png", w = 10.67, h = 8,type = "cairo-png")
+
 
 ###################################
 ##
@@ -425,57 +472,6 @@ for (t in tracts) {
   tracts_sf_df <- rbind(tracts_sf_df,test_df)
   
 }
-
-## parks
-
-dc_parks <- readOGR("data/shapefiles",
-                            layer="Parks_and_Recreation_Areas")
-
-dc_parks_centers <- SpatialPointsDataFrame(gCentroid(dc_parks, byid=TRUE), 
-                                      dc_parks@data, match.ID=FALSE)
-
-coordinates(stop_frisk_matched) <- ~ LONGITUDE + LATITUDE
-
-parks <- levels(dc_parks$NAME)
-
-parks_sf_df <- data.frame()
-
-for (p in parks) {
-  
-  print(paste("Classifying stop and frisk incidents in",p))
-  
-  test <- data.frame()
-  
-  park <- dc_parks_centers[dc_parks_centers$NAME == p , ]
-  
-  park <- as.data.frame(park) %>% slice(1)
-  
-  park_lat_long <- c(park$x,park$y)
-  
-  stop_frisk_matched_df <- as.data.frame(stop_frisk_matched)
-
-  parks_matched = stop_frisk_matched_df %>% 
-    mutate(distanceFromCentre = by(stop_frisk_matched_df, 1:nrow(stop_frisk_matched_df), function(row) { 
-      (distHaversine(c(row$ï..X,row$Y), park_lat_long) / 1609) * 5280 })) %>%
-    filter(distanceFromCentre < 500)
-  
-  parks_sf_df <- rbind(parks_sf_df,parks_matched)
-  
-}
-
-dc_parks_centers_df <- as.data.frame(dc_parks_centers)
-
-combined <- merge(stop_frisk_matched_df,dc_parks_centers_df,by=NULL)
-
-combined$distance <- distHaversine(combined[20:21],combined[119:120]) / 1609
-combined$distance <- combined$distance * 5280 #convert to feet
-
-combined <- combined %>%
-  filter(distance<100)
-
-stops_by_parks <- combined %>%
-  group_by(NAME) %>%
-  summarise(sf=n())
 
 ###################################
 ##
@@ -673,35 +669,37 @@ sf_race$type <- 'Stop & Frisk'
 census_race$type <- 'Census'
 
 census_sf_race <- rbind(sf_race,census_race)
-census_sf_race$value <- as.numeric(as.character(census_sf_race$value))
+census_sf_race$value <- as.numeric(as.character(census_sf_race$value))/100
 
 census_sf_race <- ggplot(census_sf_race,aes(x=variable,y=as.numeric(value),fill=variable)) + 
   geom_bar(stat = "identity",position = "stack") +
   theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  ylab('Stop and Frisk Incidents') + xlab("Race") + ggtitle("DC Race: Stop & Frisk - Census Comparison") + 
+  ylab('Stop and Frisk Incidents') + xlab("Race") + ggtitle("Stop & Frisk - Census Racial Comparison") + 
   scale_x_discrete(limits = c("White","Black","Hispanic/Latino","Asian")) +
-  geom_text(aes(x=variable,y=value,label=round(value,2)),data=census_sf_race, 
-            position=position_dodge(width=0.9), vjust=-0.25) +
+  scale_y_continuous(labels=scales::percent,limits=c(0,1)) +
+  geom_text(aes(x=variable,y=value,label=percent(round(value,2))),data=census_sf_race, 
+            position=position_dodge(width=0.9), vjust=-0.5,size=5) +
   scale_fill_discrete(name="Legend") +
   facet_wrap(~type)
 
-ggsave(plot = census_sf_race, "03_stop_frisk/images/census_sf_race.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = census_sf_race, "03_stop_frisk/images/03_census_sf_race.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## scatter plot of neighborhood racial composition and percent of stop and frisk by race
 
 nbh_sf_demos_census$diffcats <- cut(nbh_sf_demos_census$diff,4)
 
-nbh_sf_race <- ggplot(data=filter(nbh_sf_demos_census,demo_group %in% c("Race/Ethnicity")),aes(x=freq,y=census_value)) + 
-  geom_point(aes(size=n,color=subgroup)) + scale_x_continuous(limits = c(0, 1),labels = scales::percent) + 
+nbh_sf_race_plot <- ggplot(data=filter(nbh_sf_demos_census,demo_group %in% c("Race/Ethnicity")),aes(x=freq,y=census_value)) + 
+  geom_point(aes(size=n,color=subgroup),alpha=.7) + scale_x_continuous(limits = c(0, 1),labels = scales::percent) + 
   scale_y_continuous(limits = c(0, 100)) + geom_abline(intercept = 0,slope = 100) + 
   geom_hline(yintercept = 50) + geom_vline(xintercept = .5) +
   theme_fivethirtyeight() +
   labs(x = "Percent of Stop and Frisk", y = "Percent of Neighborhood Residents") +
   ggtitle("Neighborhood Population v. Stop & Frisk") +
+  scale_color_discrete(name="Legend") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text()) 
 
-ggsave(plot = nbh_sf_race, "03_stop_frisk/images/nbh_sf_race.png", w = 10.67, h = 10.67,type = "cairo-png")
+ggsave(plot = nbh_sf_race_plot, "03_stop_frisk/images/06_nbh_sf_race.png", w = 10.67, h = 10.67,type = "cairo-png")
 
 ## difference of neighborhood racial composition and percent of stop and frisk by race
 
@@ -710,14 +708,16 @@ nbh_sf_demos_census$diff <-  (nbh_sf_demos_census$census_value/100) - nbh_sf_dem
 nbh_diff_black<- ggplot(data=filter(nbh_sf_demos_census,subgroup %in% c("Black") & demo_group != "Total"), 
        aes(x = reorder(neighborhood, diff), 
            y = as.numeric(diff))) + 
-  #geom_bar(stat = "identity",show.legend=FALSE) + 
-  geom_point(aes(size=n,color=diff),stat='identity') + coord_flip() +
-  ggtitle("Neighborhood Difference in Stop & Frisk Rate & Population \n among Black Residents (2012 - 2017)") + 
+  geom_point(aes(size=n,color=diff),alpha=.5,stat='identity') + coord_flip() +
   geom_hline(yintercept = 0) +
-  #geom_text(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")),aes(label=nbh_sf_demos_census$n), vjust=0,hjust=-0.1, position=position_dodge(.5), size=3,) + 
   theme_fivethirtyeight() +
-  labs(x = "Neighborhood", y = "Stop & Frisk - Population") +
-  theme(plot.title = element_text(hjust = 0.5),text = element_text(size=10)) + guides(color=FALSE) +
+  labs(title = "Neighborhood Difference in Stop & Frisk Rate & Population",
+       subtitle = "among Black Residents (2012 - 2017)", 
+       y = 'Stop & Frisk - Population',
+       x="Neighborhood",size="Total Stop & Frisk") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5,size=12),
+        text = element_text(size=10)) + guides(color=FALSE) +
   scale_color_gradient(low = "red", high = "green", limits=c(min(nbh_sf_demos_census$diff),max(nbh_sf_demos_census$diff))) +
   scale_y_continuous(labels=scales::percent) +
   geom_segment(aes(y = 0, 
@@ -726,7 +726,7 @@ nbh_diff_black<- ggplot(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")
                    xend = neighborhood), 
                color = "black")
 
-ggsave(plot = nbh_diff_black, "03_stop_frisk/images/nbh_diff_black.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = nbh_diff_black, "03_stop_frisk/images/07_nbh_diff_black.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## total sf by day of month
 
@@ -1188,7 +1188,7 @@ nbh_crime_race <- nbh_crime_race %>%
   replace(., is.na(.), 0)
 
 nbh_crime_sf_race_scatter <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("White","Black","Hispanic/Latino")),aes(x=freq,y=crime_freq)) + 
-  geom_point(aes(size=n,color=subgroup)) + 
+  geom_point(aes(size=n,color=subgroup),alpha=.7) + 
   scale_x_continuous(limits = c(0, 1),labels = scales::percent) + 
   scale_y_continuous(limits = c(0, 1.0),labels = scales::percent) + 
   geom_abline(intercept = 0,slope = 1) + 
@@ -1196,17 +1196,18 @@ nbh_crime_sf_race_scatter <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("
   theme_fivethirtyeight() +
   labs(x = "Percent of Stop and Frisk", y = "Percent of Crime") +
   ggtitle("Neighborhood Crime v. Stop & Frisk") +
+  scale_color_discrete(name="Legend") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text()) 
 
-ggsave(plot = nbh_crime_sf_race_scatter, "03_stop_frisk/images/nbh_crime_sf_race_scatter.png", w = 10.67, h = 10.67,type = "cairo-png")
+ggsave(plot = nbh_crime_sf_race_scatter, "03_stop_frisk/images/11_nbh_crime_sf_race_scatter.png", w = 10.67, h = 10.67,type = "cairo-png")
 
 nbh_crime_race$diff <-  (nbh_crime_race$crime_freq) - nbh_crime_race$freq
 
 nbh_diff_crimes <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("White","Black","Hispanic/Latino")), 
                         aes(x = reorder(neighborhood, diff), 
                             y = as.numeric(diff))) + 
-  geom_point(aes(size=n,color=subgroup),stat='identity') + coord_flip() +
-  ggtitle("Neighborhood Difference in Stop & Frisk Rate & Crime Rate by Race (2016)") + 
+  geom_point(aes(size=n,color=subgroup),alpha=.7,stat='identity') + coord_flip() +
+  ggtitle("Neighborhood Difference in Stop & Frisk Rate & Crime Rate\nby Race (2016)") + 
   geom_hline(yintercept = 0) +
   theme_fivethirtyeight() +
   labs(x = "Neighborhood", y = "Stop & Frisk - Population") +
@@ -1215,5 +1216,56 @@ nbh_diff_crimes <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("White","Bl
   guides(color=guide_legend(title="Race/Ethnicity"),
          size=guide_legend(title="Total Stop & Frisk")) 
 
-ggsave(plot = nbh_diff_crimes, "03_stop_frisk/images/13_nbh_diff_crimes.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = nbh_diff_crimes, "03_stop_frisk/images/12_nbh_diff_crimes.png", w = 10.67, h = 8,type = "cairo-png")
 
+## poisson modelling
+
+stops_crimes_tracts_nbh$race_ethn <- factor(stops_crimes_tracts_nbh$race_ethn,levels = c("White","Black","Hispanic/Latino"))
+
+stop_model <- glm(stop_frisks ~ race_ethn + bins, family=quasipoisson,
+                  offset=log(crimes),data = stops_crimes_tracts_nbh,subset=crimes>0 & stop_frisks>0)
+
+summary(stop_model)
+
+stargazer(stop_model,align = TRUE, out="03_stop_frisk/images/poisson.htm")
+
+coefs <- data.frame(stop_model$coefficients,check.rows = T)
+
+Black = c(exp(coefs[1,1] + coefs[2,1] + 0), 
+          exp(coefs[1,1] + coefs[2,1] + coefs[4,1]), 
+          exp(coefs[1,1] + coefs[2,1] + coefs[5,1]),
+          exp(coefs[1,1] + coefs[2,1] + coefs[6,1]),
+          exp(coefs[1,1] + coefs[2,1] + coefs[7,1])) 
+
+White = c(exp(coefs[1,1] + 0 + 0),
+          exp(coefs[1,1] + 0 + coefs[4,1]), 
+          exp(coefs[1,1] + 0 + coefs[5,1]),
+          exp(coefs[1,1] + 0 + coefs[6,1]),
+          exp(coefs[1,1] + 0 + coefs[7,1])) 
+
+Hispanic = c(exp(coefs[1,1] + coefs[3,1] + 0),
+             exp(coefs[1,1] + coefs[3,1] + coefs[4,1]), 
+             exp(coefs[1,1] + coefs[3,1] + coefs[5,1]),
+             exp(coefs[1,1] + coefs[3,1] + coefs[6,1]),
+             exp(coefs[1,1] + coefs[3,1] + coefs[7,1]))
+
+labels <- c("0-10% black","10-40% black","40-60% black","60-80% black","80-100% black")
+
+results <- data.frame(labels, Black, White,Hispanic) 
+
+results_l <- melt(results)
+
+poisson_plot <- ggplot(results_l,aes(x=labels,y=value,color=variable,group=as.character(variable))) + 
+  geom_line(size=2) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5)) + 
+  labs(title = "Estimated Stop & Frisk by Neighborhood Racial Composition",
+       subtitle = "Poisson Regression results using constant term + ethnicity parameters for each neighborhood composition", 
+       y = 'Stop & Frisks compared to Crime',
+       x="Neighborhood Racial Composition") + 
+  scale_x_discrete(labels = c("< 10% black","10 - 40% black","40 - 60% black","> 60% black","80 - 100% black")) +
+  scale_color_discrete(name="Legend") +
+  scale_y_continuous(trans = "log",breaks = c(0,.1,.2,.5,1,2))
+
+ggsave(plot = poisson_plot, "03_stop_frisk/images/13_poisson_plot.png", w = 10.67, h = 8,type = "cairo-png")

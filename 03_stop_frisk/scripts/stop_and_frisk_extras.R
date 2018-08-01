@@ -166,3 +166,104 @@ closes_crime_plot <- ggplot(closest_crimes,aes(x=as.numeric((time_diff)/60))) +
 ggsave(plot = closest_crime, "03_stop_frisk/images/closes_crime_plot.png", w = 10.67, h = 8,type = "cairo-png")
 
 # %15 of all stop & frisk incidents occured within an hour of crime incident 
+
+
+## Arrest data
+
+arrests <- read.csv("data/crime/arrest_charges_anon.csv",stringsAsFactors = F)
+
+arrests <- arrests %>% filter(!is.na(latitude))
+
+dc_neighborhoods <- readOGR("data/shapefiles",
+                            layer="Neighborhood_Clusters")
+
+coordinates(arrests) <- ~ longitude + latitude
+
+neighborhoods <- levels(dc_neighborhoods$NBH_NAMES)
+
+nbh_arrests_df <- data.frame()
+
+for (n in neighborhoods) {
+  
+  print(paste("Classifying stop and frisk incidents in",n))
+  
+  test <- data.frame()
+  
+  cluster <- dc_neighborhoods[dc_neighborhoods$NBH_NAMES == n , ]
+  
+  proj4string(arrests) <- proj4string(cluster)
+  
+  test <- arrests[complete.cases(over(arrests, cluster)), ]
+  test_df <- as.data.frame(test)
+  try(test_df$neighborhood <- n)
+  
+  nbh_arrests_df <- rbind(nbh_arrests_df,test_df)
+  
+}
+
+## pulling in neighborhood-level census
+
+census_nbh_pct_black <- census_data %>%
+  filter(variable == "Black")
+
+census_nbh_pct_black$bins <- cut(census_nbh_pct_black$census_value, c(0,10,40,60,80,100))
+
+nbh_arrests_df$race_ethn <- ifelse(as.character(nbh_arrests_df$ethnicity)=='Hispanic Or Latino','Hispanic/Latino',
+                                   as.character(nbh_arrests_df$race))
+
+nbh_arrests_df$race_ethn[nbh_arrests_df$ethnicity == "Hispanic Or Latino"] <- "Hispanic/Latino" 
+
+## calculate neighborhood-level arrests by race
+
+arrests_by_race_nbh <- nbh_arrests_df %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise(arrests=n()) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
+
+## calculate neighborhood-level stop and firsks by race
+
+stops_by_race_nbh <- nbh_sf_df %>%
+  filter(Year == 2016) %>%
+  group_by(neighborhood,race_ethn) %>%
+  summarise(stop_frisks=n()) %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino"))
+
+## merge arrests & stop and frisk then census
+
+stops_arrests_nbh <- merge(arrests_by_race_nbh,stops_by_race_nbh,by=c("neighborhood","race_ethn"),
+                           all = T)
+
+additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
+
+stops_arrests_nbh <- merge(stops_arrests_nbh,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
+
+stops_arrests_tracts_nbh <- merge(stops_arrests_nbh,census_nbh_pct_black,by.x="NAME",by.y="CLUSTER_TR2000")
+
+stops_arrests_tracts_nbh$adj_sf <- (stops_arrests_tracts_nbh$stop_frisks / stops_arrests_tracts_nbh$pop) * 100
+stops_arrests_tracts_nbh$adj_arrests <- (stops_arrests_tracts_nbh$arrests / stops_arrests_tracts_nbh$pop) * 100
+
+## roll up neighborhoods and aggregate stop & frisk and arrests based on racial bins
+
+stops_arrests_nbh_census_bins <- stops_arrests_tracts_nbh %>%
+  replace(is.na(.), 0) %>%
+  group_by(bins,race_ethn) %>%
+  summarise(total_arrests = sum(adj_arrests),
+            total_sf = sum(adj_sf))
+
+## calculate arest to stop & frisk ratio
+
+stops_arrests_nbh_census_bins$arrest_to_stops <- stops_arrests_nbh_census_bins$total_sf /
+  stops_arrests_nbh_census_bins$total_arrests
+
+stops_arrest_ratio <- ggplot(stops_arrests_nbh_census_bins,aes(x=bins,y=arrest_to_stops,color=race_ethn,group=as.character(race_ethn))) + 
+  geom_line(size=2) +
+  theme_fivethirtyeight() +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
+  ylab('Stops to Arrests Ratio') + xlab("Neighborhood Racial Composition") + 
+  scale_x_discrete(labels = c("< 10% black","10 - 40% black","40 - 60% black","> 60% black","80 - 100% black")) +
+  scale_color_discrete(name="Legend") +
+  scale_y_continuous(limits = c(0,2.5)) +
+  ggtitle("Stop & Frisk to Arrest Ratio (2016 Only)")
+
+ggsave(plot = stops_arrest_ratio, "03_stop_frisk/images/stops_arrest_ratio.png", w = 10.67, h = 8,type = "cairo-png")
+

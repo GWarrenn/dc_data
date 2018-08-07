@@ -12,11 +12,20 @@ shinyServer(function(input, output) {
                 "White.census","White.Diff")
   
   output$tbl = renderDT(
-    datatable(filedata,rownames = FALSE, options = list(
-      columnDefs = list(list(className = 'dt-center', targets = 0:13)))) %>%
+    datatable(filedata,rownames = FALSE, extensions ="FixedColumns",options = list(
+      scrollX=TRUE,
+      scrollY=500,
+      fixedColumns = list(leftColumns = 2),
+      autoWidth = TRUE,
+      columnDefs = list(list(width = '250px', targets = c(1)),
+                        list(className = 'dt-center', targets = 0:13),
+                        list(visible=FALSE, targets=c(0))))) %>%
       formatStyle(format_cols,
         backgroundColor = styleInterval(0, c('lightpink', 'lightgreen'))) %>%
+      #formatStyle("neighborhood","white-space"="nowrap") %>%
+      #formatStyle(columns = c(2), width='200%') %>%
       formatPercentage(numeric_cols, 1)
   )
 })
-
+# columnDefs = list(list(visible=FALSE, targets=c(4)
+# 

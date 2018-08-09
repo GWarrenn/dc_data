@@ -123,7 +123,7 @@ errors <- c("CAPTIOL","CAPITAL","ILINOI","/ SCAPITOL","13'TH","EAST CAP ST","E C
   ' AVE$',' AV$',' BLVD$',' BRG$',' CIR$',' CT$',' CRES$',' DR$',' EXPY$',' FWY$',' GDN$',
   ' GDNS$',' GRN$',' KYS$',' LN$',' LOOP$',' MEWS$',' PKWY$',' PL$',' PLZ$',' RD$',' ROW$',
   ' SQ$',' ST$',' TER$',' TR$',' WALK$',' WAY$','WEST VA', ' MARYLAD ',' MD ',' MASS ', '[.]',
-  'THS ',' THS',' IDEPENDENCE ')
+  'THS ',' THS',' IDEPENDENCE ','CAPITOL STREET [A-Z][A-Z]')
 
 fix <- c("CAPITOL","CAPITOL","ILLINOIS","SOUTH CAPITOL","13TH","EAST CAPITOL ST","EAST CAPITOL",
   "MARTIN LUTHER KING JR","CAPITOL STREET","MARTIN LUTHER KING JR","MOUNT PLEASANT",
@@ -138,7 +138,7 @@ fix <- c("CAPITOL","CAPITOL","ILLINOIS","SOUTH CAPITOL","13TH","EAST CAPITOL ST"
   ' CIRCLE',' COURT',' CRESCENT',' DRIVE',' EXPRESSWAY',' FREEWAY',' GARDENS',
   ' GARDENS',' GREEN',' KEYS',' LANE',' LOOP',' MEWS',' PARKWAY',' PLACE',
   ' PLAZA',' ROAD',' ROW',' SQUARE',' STREET',' TERRACE',' TERRACE',' WALK',' WAY','WEST VIRGINIA',
-  ' MARYLAND ',' MARYLAND ',' MASSACHUSETTS ','','TH ',' TH ',' INDEPENDENCE ')
+  ' MARYLAND ',' MARYLAND ',' MASSACHUSETTS ','','TH ',' TH ',' INDEPENDENCE ','CAPITOL STREET')
 
 i <- 1
 
@@ -314,13 +314,12 @@ stop_frisk_hourly_comb_plot <- ggplot(stop_frisk_hourly_comb, aes(x=time_of_day,
   scale_y_continuous(labels = scales::percent) +
   scale_color_discrete(name="Legend")
 
-ggsave(plot = stop_frisk_hourly_comb_plot, "03_stop_frisk/images/time_of_day_sf.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = stop_frisk_hourly_comb_plot, "03_stop_frisk/images/02_time_of_day_sf.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## average age of stop and frisk by race 
 
-stop_frisk_total$juvenile <- ifelse(stop_frisk_total$Age == "Juvenile","Juvenile",
+stop_frisk_total$juvenile <- ifelse(stop_frisk_total$Age == "Juvenile","Juveniles",
                                                   "Adults")
-
 sf_age_race <- stop_frisk_total %>%
   filter(race_ethn %in% c("White","Black","Hispanic/Latino")) %>%
   group_by(race_ethn,juvenile) %>%
@@ -336,9 +335,12 @@ sf_race_youths <- ggplot(sf_age_race,aes(x=juvenile,y=freq,fill=juvenile)) +
                               position=position_dodge(width=0.9), vjust=-0.5,size=5) +
                   theme_fivethirtyeight() +
                   scale_y_continuous(labels=scales::percent,limits=c(0,1)) +
-                  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
+                  theme(axis.title = element_text(),
+                        plot.title = element_text(hjust = 0.5),
+                        axis.text = element_text(size=12),
+                        strip.text = element_text(size=16)) + 
                   labs(title = "Proportion of Juvenile/Adult Stops by Race/Ethnicity",
-                       x = 'Race',
+                       x = '',
                        y ="",
                        fill="Legend")
 
@@ -369,7 +371,7 @@ sf_age_dist <- ggplot(filter(sf_ages, race_ethn %in% c("White","Black","Hispanic
        title="Age of Stop & Frisk Incidents by Race",
        subtitle="Among Adults")
 
-ggsave(plot = sf_age_dist, "03_stop_frisk/images/sf_age_dist.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = sf_age_dist, "03_stop_frisk/images/04_sf_age_dist.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## what are the most cited reasons for stop and frisk?
 
@@ -672,9 +674,9 @@ p <- ggplot(tf, aes(x=reorder(neighborhood,-rank), y=value, fill=value, frame= .
   coord_flip() +
   theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  ylab('Total Stop & frisk') + xlab("Neighborhood") + ggtitle("Total Stop and Frisk")
+  labs(x="Neighborhood",y="Total Stop & Frisk",title="Total Stop and Frisk",fill="Total Stop & Frisk")
 
-mygg_animate(p,filename = "03_stop_frisk/images/nbh_sf.gif",interval = 0.1, title_frame=T,ani.height=768,ani.width=1024)
+mygg_animate(p,filename = "03_stop_frisk/images/05_nbh_sf.gif",interval = 0.1, title_frame=T,ani.height=768,ani.width=1024)
 
 # overall racial sf & census breakdowns
 
@@ -852,15 +854,15 @@ nbh_sf_yearly <- merge(nbh_sf_yearly,crime_all_years,
 
 ## relationship between previous year in crime and current year stop and frisk
 
-crime_frisk_yearly <- ggplot(data=nbh_sf_yearly,aes(x=stop_frisks,y=crime)) + 
+crime_frisk_yearly <- ggplot(data=nbh_sf_yearly,aes(x=crime,y=stop_frisks)) + 
   geom_point() + 
   geom_smooth(method='glm',formula=y~x) +
   theme_fivethirtyeight() +
-  labs(x = "Current Year Stop and Frisk", y = "Previous Year Crime Reported") +
+  labs(y = "Current Year Stop and Frisk", x = "Previous Year Crime Reported") +
   ggtitle("Previous Year Crime Incidents v. Current Year Stop & Frisk") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
 
-ggsave(plot = crime_frisk_yearly, "03_stop_frisk/images/crime_frisks.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = crime_frisk_yearly, "03_stop_frisk/images/08_crime_frisks.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## crime modelling
 
@@ -885,20 +887,40 @@ yearly_model <- lm(formula = avg_sf ~ avg_prev_yr_crime,
 
 stargazer(yearly_model,align = TRUE, out="03_stop_frisk/images/models.htm")
 
-nbh_sf_avg$predicted <- predict(yearly_model)
-nbh_sf_avg$residuals <- residuals(yearly_model)
+## crime & race model
 
-ggplot(nbh_sf_avg, aes(x = avg_prev_yr_crime, y = avg_sf)) +
-  geom_smooth(method = "lm", se = FALSE, color = "lightgrey") +
-  geom_segment(aes(xend = avg_prev_yr_crime, yend = predicted), alpha = .2, size=2) +
-  geom_point(aes(color = residuals), size=4) +  # Color mapped here
-  scale_color_gradient2(low = "blue", mid = "white", high = "red") +
-  guides(color = FALSE) +
-  geom_point(aes(y = predicted), shape = 1) +
+nbh_sf_yearly <- merge(nbh_sf_yearly,additional_cluster_info,by.y="NBH_NAMES",by.x="neighborhood")
+nbh_sf_yearly <- merge(nbh_sf_yearly,census_data_original,by.x="NAME",by.y="CLUSTER_TR2000")
+
+nbh_sf_yearly$pctnonwhite <- nbh_sf_yearly$PctAsianPINonHispBridge_2010 + 
+  nbh_sf_yearly$PctBlackNonHispBridge_2010 +
+  nbh_sf_yearly$PctHisp_2010
+
+nbh_sf_avg$coll_bins <-cut(nbh_sf_avg$pct_non_white, c(0,10,40,60,90,100))
+
+yearly_model_w_race <- lm(formula = avg_sf ~ avg_prev_yr_crime + coll_bins,
+                   data = nbh_sf_avg)
+
+stargazer(yearly_model,yearly_model_w_race,align = TRUE, out="03_stop_frisk/images/models_w_race.htm")
+
+nbh_sf_yearly$predicted_w_race <- predict(yearly_model_w_race)
+
+levels(nbh_sf_yearly$coll_bins) <- c("0-10%","10-40%","40-60%","60-90%","90-100%")
+
+crime_frisk_yearly_race <- ggplot(data=subset(nbh_sf_yearly,crime < 2500),aes(x=crime,y=stop_frisks,color=coll_bins)) + 
+  geom_point(aes(color=coll_bins)) +
+  geom_smooth(method = lm,size=2,se = F) +
   theme_fivethirtyeight() +
-  labs(x = "Previous Year Total Crimes Reported", y = "Current Year Stop and Frisk") +
-  ggtitle("Average Crime Only Model Residuals by Neighborhood Racial Composition") +
+  labs(x = "Previous Year Total Crimes Reported", 
+       y = "Current Year Stop and Frisk",
+       color = "Neighborhood POC %") +
+  ggtitle("Stop & Frisk and Crime by Neighborhood Racial Composition") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
+
+ggsave(plot = crime_frisk_yearly_race, "03_stop_frisk/images/crime_frisk_yearly_race.png", w = 10.67, h = 8,type = "cairo-png")
+
+nbh_sf_yearly$predicted <- predict(yearly_model)
+nbh_sf_yearly$residuals <- residuals(yearly_model)
 
 residuals_nbh_race <- nbh_sf_avg %>%
   group_by(pct_non_white) %>%
@@ -913,7 +935,7 @@ crime_model_residuals <- ggplot(residuals_nbh_race, aes(x = pct_non_white, y = a
   ggtitle("Average Crime-Only Model Residuals by Neighborhood Racial Composition") +
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
 
-ggsave(plot = crime_model_residuals, "03_stop_frisk/images/crime_model_residuals.png", w = 10.67, h = 8,type = "cairo-png")
+ggsave(plot = crime_model_residuals, "03_stop_frisk/images/09_crime_model_residuals.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## total stop and frisk counts by neighborhood race from census
 
@@ -1106,10 +1128,39 @@ nbh_crime_sf_race_scatter <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("
 
 ggsave(plot = nbh_crime_sf_race_scatter, "03_stop_frisk/images/11_nbh_crime_sf_race_scatter.png", w = 10.67, h = 10.67,type = "cairo-png")
 
+######################################
+##
+## plotting crime by census
+##
+######################################
+
+nbh_crimes_race <- merge(additional_cluster_info,nbh_crimes_race,by.y="neighborhood",by.x="NBH_NAMES")
+nbh_crime_demos_census <- merge(nbh_crimes_race,census_data,by.x=c("NAME","subgroup"),by.y=c("CLUSTER_TR2000","variable"))
+
+nbh_crime_demos_census <- merge(nbh_crime_demos_census,nbh_sf_demos_census[ , c("NAME","subgroup","n")],by=c("NAME","subgroup"))
+
+crime_and_census_plot <- ggplot(data=filter(nbh_crime_demos_census,subgroup %in% c("White","Black","Hispanic/Latino")),aes(x=census_value/100,y=crime_freq)) + 
+  geom_point(aes(size=n,color=subgroup),alpha=.7) +
+  #geom_point(aes(size=census_value,color=subgroup),alpha=.7) +
+  scale_x_continuous(limits = c(0, 1),labels = scales::percent) + 
+  scale_y_continuous(limits = c(0, 1.0),labels = scales::percent) + 
+  geom_abline(intercept = 0,slope = 1) + 
+  geom_hline(yintercept = .5) + geom_vline(xintercept = .5) +
+  theme_fivethirtyeight() +
+  labs(x = "Neighborhood Population", y = "Percent of Crime") +
+  ggtitle("Neighborhood Crime v. Census Population") +
+  scale_color_discrete(name="Legend") +
+  scale_size_continuous(name="Total Stop & Frisk") +
+  theme(plot.title = element_text(hjust = 0.5),axis.title = element_text()) 
+
+ggsave(plot = crime_and_census_plot, "03_stop_frisk/images/crime_and_census_plot.png", w = 10.67, h = 10.67,type = "cairo-png")
+
+
+
 nbh_crime_race$diff <-  (nbh_crime_race$crime_freq) - nbh_crime_race$freq
 
 nbh_diff_crimes <- ggplot(data=filter(nbh_crime_race,subgroup %in% c("White","Black","Hispanic/Latino")), 
-                        aes(x = reorder(neighborhood, diff), 
+                        aes(x = reorder(NBH_NAMES, diff), 
                             y = as.numeric(diff))) + 
   geom_point(aes(size=n,color=subgroup),alpha=.7,stat='identity') + coord_flip() +
   ggtitle("Neighborhood Difference in Stop & Frisk Rate & Crime Rate\nby Race (2016)") + 
@@ -1211,3 +1262,43 @@ poisson_plot <- ggplot(results_l,aes(x=labels,y=value,color=variable,group=as.ch
   scale_y_continuous(trans = "log",breaks = c(0,.1,.2,.5,1,2))
 
 ggsave(plot = poisson_plot, "03_stop_frisk/images/13_poisson_plot.png", w = 10.67, h = 8,type = "cairo-png")
+
+
+## exporting nbh data to json for table
+
+nbh_sf_demos_census$census_percent <- nbh_sf_demos_census$census_value / 100
+nbh_sf_demos_census$census_percent <- round(nbh_sf_demos_census$census_percent,2)
+
+output_sf <- dcast(data = nbh_sf_demos_census, neighborhood ~ subgroup, value.var = "freq")
+  
+output_sf <- output_sf %>%
+  rename(Total.stop_and_frisk = Total,
+         Juvenile.stop_and_frisk = Juvenile,
+         White.stop_and_frisk = White,
+         Black.stop_and_frisk = Black,
+         "Hispanic.Latino.stop_and_frisk" = "Hispanic/Latino")
+
+output_census <- dcast(data = nbh_sf_demos_census, neighborhood ~ subgroup, value.var = "census_percent")
+
+output_census <- output_census %>%
+  rename(Total.census = Total,
+         Juvenile.census = Juvenile,
+         White.census = White,
+         Black.census = Black,
+         "Hispanic.Latino.census" = "Hispanic/Latino")
+
+output <- merge(output_sf,output_census,by=c("neighborhood"))
+
+output$Black.Diff <- output$Black.census - output$Black.stop_and_frisk
+output$Hispanic.Latino.Diff <- output$Hispanic.Latino.census - output$Hispanic.Latino.stop_and_frisk
+output$Juvenile.Diff <- output$Juvenile.census - output$Juvenile.stop_and_frisk
+output$White.Diff <- output$White.census - output$White.stop_and_frisk
+
+order_cols <- c("neighborhood","Black.stop_and_frisk","Black.census","Black.Diff",
+                "Hispanic.Latino.stop_and_frisk","Hispanic.Latino.census","Hispanic.Latino.Diff",
+                "Juvenile.stop_and_frisk","Juvenile.census","Juvenile.Diff","White.stop_and_frisk",
+                "White.census","White.Diff")
+
+output <- output[, order_cols]
+
+write.csv(output, "03_stop_frisk/scripts/shiny/sf_nbh_summary.csv")

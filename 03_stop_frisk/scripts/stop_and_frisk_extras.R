@@ -103,6 +103,66 @@ tract_sf_map_shiny <- SpatialPolygonsDataFrame(dc_census_tracts, tract_poly_df,m
 writeOGR(tract_sf_map_shiny, "03_stop_frisk/shiny", "tract_sf_map_shiny", driver="ESRI Shapefile",
          overwrite_layer = TRUE)
 
+## census tracts
+
+dc_census_tracts <- readOGR("data/shapefiles",
+                            layer="Census_Tracts_in_2010")
+
+coordinates(stop_frisk_matched) <- ~ LONGITUDE + LATITUDE
+
+tracts <- levels(dc_census_tracts$TRACT)
+
+tracts_sf_df <- data.frame()
+
+for (t in tracts) {
+  
+  print(paste("Classifying stop and frisk incidents in",t))
+  
+  test <- data.frame()
+  
+  tract <- dc_census_tracts[dc_census_tracts$TRACT == t , ]
+  
+  proj4string(stop_frisk_matched) <- proj4string(tract)
+  
+  test <- stop_frisk_matched[complete.cases(over(stop_frisk_matched, tract)), ]
+  test_df <- as.data.frame(test)
+  try(test_df$tract <- t)
+  
+  tracts_sf_df <- rbind(tracts_sf_df,test_df)
+  
+}
+
+
+## tracts
+
+tracts_sf_tot <- tracts_sf_df %>%
+  group_by(tract) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) 
+
+tracts_sf_tot$demo_group <- "Total"
+tracts_sf_tot$subgroup <- "Total"
+
+tracts_sf_race <- tracts_sf_df %>%
+  group_by(tract,race_ethn) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) %>%
+  rename(subgroup = race_ethn)
+
+tracts_sf_race$demo_group <- "Race/Ethnicity"
+
+tracts_sf_age <- tracts_sf_df %>%
+  group_by(tract,juvenile) %>%
+  summarise (n = n()) %>%
+  mutate(freq=n/sum(n)) %>%
+  rename(subgroup = juvenile) %>%
+  subset(subgroup %in% c("Juvenile"))
+
+tracts_sf_age$demo_group <- "Age"
+
+tracts_sf_demos <- dplyr::bind_rows(tracts_sf_tot,tracts_sf_age,tracts_sf_race)
+
+
 ###################################
 ##
 ## calculating average time of "nearest" crime

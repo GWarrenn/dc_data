@@ -1,6 +1,6 @@
 ## Author: August Warren
 ## Description: Analysis of DC Stop and Frisk Data
-## Date: 5/22/2018
+## Date: 8/18/2018
 ## Status: Draft/Unpublished
 ## Specs: R version 3.3.2 (2016-10-31)
 
@@ -153,7 +153,7 @@ stop_frisk_total$street_name <- gsub(pattern = "\\\\ |^OF ",
                                      replacement = "",
                                      x = stop_frisk_total$street_name)
 
-## SOUTH/NORTH CAPITOL STREETS HAVE NE/SW/NE/SE BUT NOT IN BLACK CENTROIDS -- DROPPING
+## removing quadrants in capitol streets -- not in block centroid data
 
 quads <- c("NE","NW","SW","SE")
 
@@ -247,6 +247,8 @@ unmatched <- third_merge %>%
 
 stop_frisk_all_stops <- rbind(stop_frisk_1,stop_frisk_2)
 
+## standard funciton to add demos to all forcible, matched lat/long forcible, forcible & non-forcible stops
+
 add_demos <- function(data_frame){
  
   data_frame$race_ethn <- ifelse(data_frame$Subject_Ethnicity=='Hispanic Or Latino','Hispanic/Latino',
@@ -316,7 +318,7 @@ stop_frisk_hourly_comb_plot <- ggplot(stop_frisk_hourly_comb, aes(x=time_of_day,
 
 ggsave(plot = stop_frisk_hourly_comb_plot, "03_stop_frisk/images/02_time_of_day_sf.png", w = 10.67, h = 8,type = "cairo-png")
 
-## average age of stop and frisk by race 
+## percent of juvenile stops by race 
 
 stop_frisk_total$juvenile <- ifelse(stop_frisk_total$Age == "Juvenile","Juveniles",
                                                   "Adults")
@@ -346,6 +348,8 @@ sf_race_youths <- ggplot(sf_age_race,aes(x=juvenile,y=freq,fill=juvenile)) +
 
 ggsave(plot = sf_race_youths, "03_stop_frisk/images/sf_race_youths.png", w = 10.67, h = 8,type = "cairo-png")
 
+## average age of stop and frisk by race 
+
 sf_ages <- stop_frisk_total %>%
   filter(Age != "Juvenile")
 
@@ -373,7 +377,7 @@ sf_age_dist <- ggplot(filter(sf_ages, race_ethn %in% c("White","Black","Hispanic
 
 ggsave(plot = sf_age_dist, "03_stop_frisk/images/04_sf_age_dist.png", w = 10.67, h = 8,type = "cairo-png")
 
-## what are the most cited reasons for stop and frisk?
+## what are the most cited reasons for non-forcible stops?
 
 stop_frisk_all_stops$reason <- ifelse(grepl("Suspicious",stop_frisk_all_stops$REASON.FOR.STOP),
                                 "Suspicious Vehicles/Persons/Activities",stop_frisk_all_stops$REASON.FOR.STOP)
@@ -406,6 +410,8 @@ reason_for_stop_plot <- ggplot(reasons_for_stop,aes(x=reason, y=freq)) +
 
 ggsave(plot = reason_for_stop_plot, "03_stop_frisk/images/reason_for_stop.png", w = 10.67, h = 8,type = "cairo-png")
 
+## race breakdown by forcible/non-forcible stops 
+
 stop_frisk_all_stops$contact_type <- ifelse(stop_frisk_all_stops$REASON.FOR.STOP=="N/A","Forcible","Non-forcible")
 
 race_contact <- stop_frisk_all_stops %>%
@@ -428,6 +434,8 @@ race_contact_plot <- ggplot(race_contact,aes(x=race_ethn, y=freq,fill=race_ethn)
 
 ggsave(plot = race_contact_plot, "03_stop_frisk/images/race_contact.png", w = 10.67, h = 8,type = "cairo-png")
 
+## gender/race breakdown by forcible/non-forcible
+
 gender_race <- stop_frisk_all_stops %>%
   filter(race_ethn %in% c("White","Black","Hispanic/Latino")) %>%
   group_by(race_ethn,contact_type,Subject_Sex) %>%
@@ -443,14 +451,14 @@ gender_race_plot <- ggplot(gender_race,aes(x=Subject_Sex, y=freq,fill=Subject_Se
   scale_y_continuous(labels=scales::percent,limits=c(0,1)) +
   scale_x_discrete(limits=c("Male","Female")) +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
-  xlab("") + ylab("") + ggtitle("Subject Sex by Race/Ethnicity & Contact Type")+
+  xlab("") + ylab("") + ggtitle("Gender by Race/Ethnicity & Contact Type")+
   scale_fill_discrete(name="Legend",limits=c("Male","Female")) 
 
 ggsave(plot = gender_race_plot, "03_stop_frisk/images/gender_race_contact.png", w = 10.67, h = 8,type = "cairo-png")
 
 ###################################
 ##
-## Matching incidents to neighborhoods & census tracts using DC neighborhood shapefile 
+## Matching incidents to neighborhoods using DC neighborhood shapefile 
 ## provided by DC OpenData
 ## h/t: https://gis.stackexchange.com/questions/133625/checking-if-points-fall-within-polygon-shapefile
 ##
@@ -485,38 +493,9 @@ for (n in neighborhoods) {
 
 }
 
-## census tracts
-
-dc_census_tracts <- readOGR("data/shapefiles",
-                            layer="Census_Tracts_in_2010")
-
-coordinates(stop_frisk_matched) <- ~ LONGITUDE + LATITUDE
-
-tracts <- levels(dc_census_tracts$TRACT)
-
-tracts_sf_df <- data.frame()
-
-for (t in tracts) {
-  
-  print(paste("Classifying stop and frisk incidents in",t))
-  
-  test <- data.frame()
-  
-  tract <- dc_census_tracts[dc_census_tracts$TRACT == t , ]
-  
-  proj4string(stop_frisk_matched) <- proj4string(tract)
-  
-  test <- stop_frisk_matched[complete.cases(over(stop_frisk_matched, tract)), ]
-  test_df <- as.data.frame(test)
-  try(test_df$tract <- t)
-  
-  tracts_sf_df <- rbind(tracts_sf_df,test_df)
-  
-}
-
 ###################################
 ##
-## Calculate race/age breakdowns of stop and frisk at neighborhood & tract level
+## Calculate race/age breakdowns of stop and frisk at neighborhood level
 ##
 ###################################
 
@@ -551,35 +530,6 @@ nbh_sf_demos <- dplyr::bind_rows(nbh_sf_tot,nbh_sf_age,nbh_sf_race)
 additional_cluster_info <- read.csv("data/shapefiles/Neighborhood_Clusters.csv")
 
 nbh_sf_demos <- merge(nbh_sf_demos,additional_cluster_info,by.x="neighborhood",by.y="NBH_NAMES")
-
-## tracts
-
-tracts_sf_tot <- tracts_sf_df %>%
-  group_by(tract) %>%
-  summarise (n = n()) %>%
-  mutate(freq=n/sum(n)) 
-
-tracts_sf_tot$demo_group <- "Total"
-tracts_sf_tot$subgroup <- "Total"
-
-tracts_sf_race <- tracts_sf_df %>%
-  group_by(tract,race_ethn) %>%
-  summarise (n = n()) %>%
-  mutate(freq=n/sum(n)) %>%
-  rename(subgroup = race_ethn)
-
-tracts_sf_race$demo_group <- "Race/Ethnicity"
-
-tracts_sf_age <- tracts_sf_df %>%
-  group_by(tract,juvenile) %>%
-  summarise (n = n()) %>%
-  mutate(freq=n/sum(n)) %>%
-  rename(subgroup = juvenile) %>%
-  subset(subgroup %in% c("Juvenile"))
-
-tracts_sf_age$demo_group <- "Age"
-
-tracts_sf_demos <- dplyr::bind_rows(tracts_sf_tot,tracts_sf_age,tracts_sf_race)
 
 ###################################
 ##
@@ -653,6 +603,7 @@ nbh_sf_totals_census$frame <- 1
 nbh_sf_totals_census_adj$frame <- 2
 
 # Interpolate data with tweenr
+
 ts <- list(nbh_sf_totals_census, nbh_sf_totals_census_adj,nbh_sf_totals_census_adj,nbh_sf_totals_census)
 tf <- tween_states(ts, tweenlength = 0.02, statelength = 0.001, ease = c('cubic-in-out'), nframes = 30)
 
@@ -770,16 +721,77 @@ nbh_diff_black<- ggplot(data=filter(nbh_sf_demos_census,subgroup %in% c("Black")
 
 ggsave(plot = nbh_diff_black, "03_stop_frisk/images/07_nbh_diff_black.png", w = 10.67, h = 8,type = "cairo-png")
   
+## stop & frisk & census pop among blacks by neighborhood white percentage
+
+nbh_white <- nbh_sf_demos_census %>%
+  filter(subgroup %in% c("White") & demo_group != "Total") %>%
+  select(neighborhood,census_value) %>%
+  rename(nbh_white_pct = census_value)
+
+new_df <- nbh_sf_demos_census %>%
+  filter(subgroup %in% c("Black") & demo_group != "Total") %>%
+  mutate(adj_census = census_value/100) %>%
+  select(neighborhood,adj_census,freq) %>%
+  rename(nbh_black_pct = adj_census,
+         black_sf = freq)
+
+new_df_l <- melt(new_df)
+
+num_stops <- nbh_sf_demos_census %>%
+  filter(subgroup %in% c("Black") & demo_group != "Total") %>%
+  select(neighborhood,n) 
+
+new_df_l <- merge(new_df_l,nbh_white,by="neighborhood")
+new_df_l <- merge(new_df_l,num_stops,by="neighborhood")
+
+new_df <- merge(new_df,nbh_white,by="neighborhood")
+
+new_df$indicator <- ifelse(new_df$black_sf > new_df$nbh_black_pct,"Higher","Lower")
+
+group.colors <- c("Higher" = "#FF0000", "Lower" = "#008000", "Black Stop & Frisk Percentage" = cols[1], "Black Census Percentage" = cols[3])
+
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length = n + 1)
+  hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+n = 4
+cols = gg_color_hue(n)
+
+levels(new_df_l$variable) <- c("Black Census Percentage","Black Stop & Frisk Percentage")
+
+test <- ggplot(data=new_df_l, 
+       aes(x = as.numeric(nbh_white_pct/100), 
+           y = as.numeric(value)),
+       color = variable) + 
+  geom_point(aes(size=n,color=variable),alpha=.5,stat='identity') + 
+  coord_flip() +
+  geom_segment(data = new_df, aes(y = nbh_black_pct, 
+                   x = as.numeric(nbh_white_pct/100), 
+                   yend = black_sf, 
+                   xend = as.numeric(nbh_white_pct/100),
+                   color=indicator),
+               size = 1,
+               alpha = .2) +
+  scale_color_manual(values = group.colors) +
+  theme_fivethirtyeight() +
+  labs(title = "Neighborhood Difference in Stop & Frisk Rate & Population",
+       subtitle = "among Black Residents (2012 - 2017)", 
+       y = 'Neighborhood Black Stop & Frisk & Population',
+       x="Neighborhood White Percentage",size="Total Stop & Frisk") +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5),
+        axis.title = element_text()) +
+  scale_x_continuous(limits = c(0, .85),labels = scales::percent) + 
+  scale_y_continuous(limits = c(0, 1),labels = scales::percent) 
+
+ggsave(plot = test, "03_stop_frisk/images/test.png", w = 10.67, h = 8,type = "cairo-png")
+
 ###################################
 ##
 ## Tying in crime data
 ##
 ###################################
-
-## census tracts
-
-dc_census_tracts <- readOGR("data/shapefiles",
-                            layer="Census_Tracts_in_2010")
 
 coordinates(stop_frisk_matched) <- ~ LONGITUDE + LATITUDE
 
@@ -864,14 +876,12 @@ crime_frisk_yearly <- ggplot(data=nbh_sf_yearly,aes(x=crime,y=stop_frisks)) +
 
 ggsave(plot = crime_frisk_yearly, "03_stop_frisk/images/08_crime_frisks.png", w = 10.67, h = 8,type = "cairo-png")
 
-## crime modelling
+## crime-only modelling
 
 nbh_sf_avg <- nbh_sf_yearly %>%
   group_by(neighborhood) %>%
   summarise(avg_sf = mean(stop_frisks),
             avg_prev_yr_crime = mean(crime))
-
-par(mfrow=c(2,2)) 
 
 nbh_sf_avg <- merge(nbh_sf_avg,additional_cluster_info,by.y="NBH_NAMES",by.x="neighborhood")
 nbh_sf_avg <- merge(nbh_sf_avg,census_data_original,by.x="NAME",by.y="CLUSTER_TR2000")
@@ -898,7 +908,9 @@ nbh_sf_yearly$pctnonwhite <- nbh_sf_yearly$PctAsianPINonHispBridge_2010 +
 
 nbh_sf_avg$coll_bins <-cut(nbh_sf_avg$pct_non_white, c(0,10,40,60,90,100))
 
-yearly_model_w_race <- lm(formula = avg_sf ~ avg_prev_yr_crime + coll_bins,
+nbh_sf_avg$high_crime <- nbh_sf_avg$avg_prev_yr_crime > 1500
+
+yearly_model_w_race <- lm(formula = avg_sf ~ avg_prev_yr_crime + high_crime + coll_bins,
                    data = nbh_sf_avg)
 
 stargazer(yearly_model,yearly_model_w_race,align = TRUE, out="03_stop_frisk/images/models_w_race.htm")
@@ -907,7 +919,7 @@ nbh_sf_yearly$predicted_w_race <- predict(yearly_model_w_race)
 
 levels(nbh_sf_yearly$coll_bins) <- c("0-10%","10-40%","40-60%","60-90%","90-100%")
 
-crime_frisk_yearly_race <- ggplot(data=subset(nbh_sf_yearly,crime < 2500),aes(x=crime,y=stop_frisks,color=coll_bins)) + 
+crime_frisk_yearly_race <- ggplot(data=nbh_sf_yearly,aes(x=crime,y=stop_frisks,color=coll_bins)) + 
   geom_point(aes(color=coll_bins)) +
   geom_smooth(method = lm,size=2,se = F) +
   theme_fivethirtyeight() +
@@ -918,6 +930,8 @@ crime_frisk_yearly_race <- ggplot(data=subset(nbh_sf_yearly,crime < 2500),aes(x=
   theme(plot.title = element_text(hjust = 0.5),axis.title = element_text())
 
 ggsave(plot = crime_frisk_yearly_race, "03_stop_frisk/images/crime_frisk_yearly_race.png", w = 10.67, h = 8,type = "cairo-png")
+
+## looking at crime-only residulas by neighborhood racial composition
 
 nbh_sf_yearly$predicted <- predict(yearly_model)
 nbh_sf_yearly$residuals <- residuals(yearly_model)
@@ -1217,7 +1231,6 @@ psn <- stops_crimes_tracts_nbh %>%
   group_by(race_ethn) %>%
   summarise(mean_resid = mean(residuals))
 
-
 summary(stop_model)
 
 stargazer(stop_model,align = TRUE, out="03_stop_frisk/images/poisson.htm")
@@ -1263,8 +1276,7 @@ poisson_plot <- ggplot(results_l,aes(x=labels,y=value,color=variable,group=as.ch
 
 ggsave(plot = poisson_plot, "03_stop_frisk/images/13_poisson_plot.png", w = 10.67, h = 8,type = "cairo-png")
 
-
-## exporting nbh data to json for table
+## exporting nbh data to csv for table
 
 nbh_sf_demos_census$census_percent <- nbh_sf_demos_census$census_value / 100
 nbh_sf_demos_census$census_percent <- round(nbh_sf_demos_census$census_percent,2)

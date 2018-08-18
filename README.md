@@ -1,5 +1,8 @@
 # dc_data
 
-Collection of various DC datasets gathered from http://opendata.dc.gov/
+Collection of various DC datasets gathered from http://opendata.dc.gov/ to address and answer questions about the District that I find interesting.
 
-Miscellaneous analysis
+Published analyses include:
+
+* [Bike Accidents in the District](https://gwarrenn.github.io/Bike-Accidents-in-The-District/)
+

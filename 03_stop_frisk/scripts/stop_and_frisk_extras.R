@@ -28,6 +28,156 @@ library(tidyverse)
 library(tweenr)
 
 
+## Original block to lat/long matching
+
+
+# extracting street name from block name
+
+stop_frisk_total$Block.Address <- gsub(pattern = " BLK | BLOCK OF ",
+                                       replacement = " B/O ",
+                                       x = stop_frisk_total$Block.Address)
+
+stop_frisk_total$street_name <- trimws(gsub(pattern = "^.* B/O",
+                                            replacement = "",
+                                            x = stop_frisk_total$Block.Address))
+
+# fixing errors in street names
+
+errors <- c("CAPTIOL","CAPITAL","ILINOI","/ SCAPITOL","13'TH","EAST CAP ST","E CAPITOL","MLK JR",
+            "CAPITOL / 295N","MLKJR","MT PLEASANT","MARTIN LUTHER KING AV","MLK AV","4ST","7TH T",
+            "V STNW","N CAPITOL ST"," RI AV","^RI AV","N / W","$GA ","MD AV","AVENW","PA AV","STNW",
+            "NORTH CAPITOL NE","19THST","7TH T","NEW YORK AVENE NE","ST;NW","13 TH","N CAP ST",
+            "ECAPITAL ST",' ALY ',' AVE ',' AV ',' BLVD ',' BRG ',' CIR ',' CT ',' CRES ',' DR ',
+            ' EXPY ',' FWY ',' GDN ',' GDNS ',' GRN ',' KYS ',' LN ',' LOOP ',' MEWS ',' PKWY ',
+            ' PL ',' PLZ ',' RD ',' ROW ',' SQ ',' ST ',' TER ',' TR ',' WALK ',' WAY ',' ALY$',
+            ' AVE$',' AV$',' BLVD$',' BRG$',' CIR$',' CT$',' CRES$',' DR$',' EXPY$',' FWY$',' GDN$',
+            ' GDNS$',' GRN$',' KYS$',' LN$',' LOOP$',' MEWS$',' PKWY$',' PL$',' PLZ$',' RD$',' ROW$',
+            ' SQ$',' ST$',' TER$',' TR$',' WALK$',' WAY$','WEST VA', ' MARYLAD ',' MD ',' MASS ', '[.]',
+            'THS ',' THS',' IDEPENDENCE ','CAPITOL STREET [A-Z][A-Z]','[A-Z][A-Z] WASHINGTON.*','THS ',
+            '13H','^ALLEY ',' NORTH ALLEY',' SOUTH ALLEY',' MT ',' CONST ')
+
+fix <- c("CAPITOL","CAPITOL","ILLINOIS","SOUTH CAPITOL","13TH","EAST CAPITOL ST","EAST CAPITOL",
+         "MARTIN LUTHER KING JR","CAPITOL STREET","MARTIN LUTHER KING JR","MOUNT PLEASANT",
+         "MARTIN LUTHER KING JR AV","MARTIN LUTHER KING JR AV","4TH STREET","7TH STREET",
+         "V ST NW","NORTH CAPITOL ST","RHODE ISLAND AV","RHODE ISLAND AV","NW","GEORGIA ","MARYLAND AV",
+         "AVE NW","PENNSYLVANIA AV","ST NW","NORTH CAPITOL STREET","19TH STREET","7TH STREET",
+         "NEW YORK AVENUE NE","ST NW","13TH","NORTH CAPITOL ST","EAST CAPITOL ST",' ALLEY ',
+         ' AVENUE ',' AVENUE ',' BOULEVARD ',' BRIDGE ',' CIRCLE ',' COURT ',' CRESCENT ',' DRIVE ',
+         ' EXPRESSWAY ',' FREEWAY ',' GARDENS ',' GARDENS ',' GREEN ',' KEYS ',' LANE ',' LOOP ',
+         ' MEWS ',' PARKWAY ',' PLACE ',' PLAZA ',' ROAD ',' ROW ',' SQUARE ',' STREET ',' TERRACE ',
+         ' TERRACE ',' WALK ',' WAY',' ALLEY',' AVENUE',' AVENUE',' BOULEVARD',' BRIDGE',
+         ' CIRCLE',' COURT',' CRESCENT',' DRIVE',' EXPRESSWAY',' FREEWAY',' GARDENS',
+         ' GARDENS',' GREEN',' KEYS',' LANE',' LOOP',' MEWS',' PARKWAY',' PLACE',
+         ' PLAZA',' ROAD',' ROW',' SQUARE',' STREET',' TERRACE',' TERRACE',' WALK',' WAY','WEST VIRGINIA',
+         ' MARYLAND ',' MARYLAND ',' MASSACHUSETTS ','','TH ',' TH ',' INDEPENDENCE ','CAPITOL STREET','',
+         'TH ','13TH H','','','',' MOUNT ',' CONSTITUTION')
+
+stop_frisk_total$Block.Address <- gsub(pattern = 'KALORAMA AVE',
+                                       replacement = "B/O KALORAMA ROAD",
+                                       x = stop_frisk_total$Block.Address)
+
+i <- 1
+
+for (e in errors) {
+  stop_frisk_total$street_name <- gsub(pattern = e,
+                                       replacement = fix[i],
+                                       x = stop_frisk_total$street_name)
+  i <- i + 1
+} 
+
+stop_frisk_total$street_name <- gsub(pattern = "\\\\ |^OF ",
+                                     replacement = "",
+                                     x = stop_frisk_total$street_name)
+
+## removing quadrants in capitol streets -- not in block centroid data
+
+quads <- c("NE","NW","SW","SE")
+
+for (q in quads) {
+  
+  cardinals <- c("NORTH","SOUTH")
+  
+  for (cards in cardinals) {
+    stop_frisk_total$street_name <- gsub(pattern = paste(cards," CAPITOL STREET ",q,sep=""),
+                                         replacement = paste(cards," CAPITOL STREET ",sep=""),
+                                         x = stop_frisk_total$street_name)
+  }
+}
+
+# extracting block number from block name
+
+stop_frisk_total$block_number <- gsub(pattern = "B/O.*$",
+                                      replacement = "",
+                                      x = stop_frisk_total$Block.Address)
+
+stop_frisk_total$block_number <- gsub(pattern = "UNIT",
+                                      replacement = "0",
+                                      x = stop_frisk_total$block_number)
+
+# merge stop and frisk to block data with lat/lon
+
+block_data <- read.csv("data/shapefiles/Block_Centroids.csv")
+
+block_data$ONSTREETDISPLAY <- trimws(block_data$ONSTREETDISPLAY)
+
+combined <- merge(stop_frisk_total,block_data,
+                  by.x = "street_name", 
+                  by.y = "ONSTREETDISPLAY",
+                  all.x = TRUE)
+
+# use street number to filter down to correct block
+
+combined <- combined %>%
+  filter(as.numeric(block_number) - 5 < as.numeric(HIGHER_RANGE) &
+           as.numeric(block_number) + 5 >= as.numeric(LOWER_RANGE))
+
+# remove duplicates that occur from multiple intersections
+
+combined <- combined[!duplicated(combined$id), ]
+
+# finding cases that did not match the initial merge (have addresses in "STREET 1 / STREET 2" format)
+
+unmatched <- merge(stop_frisk_total,select(combined,id:ESRI_OID),by = "id",all.x=TRUE)
+unmatched <- unmatched %>%
+  filter(is.na(LATITUDE))
+
+unmatched$street_name <- gsub(pattern = " AND | & ",
+                              replacement = " / ",
+                              x = unmatched$street_name)
+
+block_data$new_match_field <- paste(block_data$FROMSTREETDISPLAY,"/",block_data$ONSTREETDISPLAY)
+
+second_merge <- merge(select(unmatched,id:block_number.x),block_data,
+                      by.x = "street_name", by.y = "new_match_field",all.x=TRUE)
+
+second_match <- second_merge %>%
+  filter(!is.na(LATITUDE))
+
+# finding cases that did not match the initial or second merge (have addresses in "13TH / STREET 2" format)
+
+block_data$new_match_field <- paste(block_data$FROMSTNAME,"/",block_data$ONSTREETDISPLAY)
+
+unmatched <- second_merge %>%
+  filter(is.na(LATITUDE))
+
+third_merge <- merge(select(unmatched,street_name:block_number.x),block_data,
+                     by.x = "street_name", by.y = "new_match_field",all.x=TRUE)
+
+third_match <- third_merge %>%
+  filter(!is.na(LATITUDE))
+
+colnames(second_match)[colnames(second_match)=="block_number.x"] <- "block_number"
+colnames(third_match)[colnames(third_match)=="block_number.x"] <- "block_number"
+colnames(combined)[colnames(combined)=="new_match_field"] <- "ONSTREETDISPLAY"
+
+combined$ONSTREETDISPLAY <- ""
+
+stop_frisk_matched <- rbind(combined,second_match,third_match)
+
+unmatched <- third_merge %>%
+  filter(is.na(LATITUDE))
+
+
 ###################################
 ##
 ## Prep map data for shiny

@@ -1,7 +1,7 @@
 ## Author: August Warren
 ## Description: Analysis of DC Stop and Frisk Data
-## Date: 8/18/2018
-## Status: Draft/Unpublished
+## Date: 9/6/2018
+## Status: Published
 ## Specs: R version 3.3.2 (2016-10-31)
 
 ###################################
@@ -274,7 +274,7 @@ sf_age_dist <- ggplot(filter(sf_ages, race_ethn %in% c("White","Black","Hispanic
         plot.subtitle = element_text(hjust = 0.5)) + 
   labs(x="Age",
        y="",
-       title="Age of Stop andd Frisk Incidents by Race/Ethnicty among Adults")
+       title="Age of Stop and Frisk Incidents by Race/Ethnicity among Adults")
 
 ggsave(plot = sf_age_dist, "03_stop_frisk/images/04_sf_age_dist.png", w = 10.67, h = 8,type = "cairo-png")
 
@@ -334,6 +334,29 @@ race_contact_plot <- ggplot(race_contact,aes(x=race_ethn, y=freq,fill=race_ethn)
   scale_fill_discrete(name="Legend",limits=c("White","Black","Hispanic/Latino")) 
 
 ggsave(plot = race_contact_plot, "03_stop_frisk/images/race_contact.png", w = 10.67, h = 8,type = "cairo-png")
+
+
+
+gender_race <- stop_frisk_total %>%
+  filter(race_ethn %in% c("White","Black","Hispanic/Latino")) %>%
+  group_by(race_ethn,Subject_Sex) %>%
+  summarise(n=n()) %>%
+  mutate(freq=n/sum(n))
+
+gender_race_plot <- ggplot(gender_race,aes(x=Subject_Sex, y=freq,fill=Subject_Sex)) +
+  geom_bar(stat="identity") + 
+  geom_text(aes(label=percent(freq)), 
+            vjust=-.5, position=position_dodge(.5), size=5) +
+  theme_fivethirtyeight() +
+  facet_wrap( ~ race_ethn) +
+  scale_y_continuous(labels=scales::percent,limits=c(0,1)) +
+  scale_x_discrete(limits=c("Male","Female")) +
+  theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5),
+        strip.text = element_text(size = 12)) + 
+  xlab("") + ylab("") + ggtitle("Gender of Stop and Frisks by Race/Ethnicity")+
+  scale_fill_discrete(name="Legend",limits=c("Male","Female")) 
+
+ggsave(plot = gender_race_plot, "03_stop_frisk/images/gender_race.png", w = 10.67, h = 8,type = "cairo-png")
 
 ## gender/race breakdown by forcible/non-forcible
 
@@ -555,7 +578,7 @@ change_in_sf <- ggplot(change_by_racial_bins,aes(x=black_bins,y=avg_change)) +
   theme_fivethirtyeight() +
   theme(axis.title = element_text(),plot.title = element_text(hjust = 0.5)) + 
   ylab('Change in Total Stop and Frisk 2010 to 2017') + xlab("Neighborhood Percent of Black Residents") + 
-  ggtitle("Average Change in Stop and Frisk 2010 to 2017 by Neighborhood Racial Composition") + 
+  ggtitle("Average Change in Stop and Frisk 2010 to 2017\nby Neighborhood Racial Composition") + 
   geom_text(aes(x=black_bins,y=avg_change,label=percent(round(avg_change,2))),data=change_by_racial_bins, 
             position=position_dodge(width=0.9), vjust=-0.5,size=5) +
   scale_y_continuous(labels=scales::percent)
@@ -709,8 +732,8 @@ plot_diff <- function(racial_group,output_file) {
     geom_point(aes(size=n,color=pct),alpha=.7,stat='identity') + coord_flip() +
     geom_hline(yintercept = 0) +
     theme_fivethirtyeight() +
-    labs(title = "Neighborhood Difference in Stop & Frisk Rate & Population",
-         subtitle = paste("among", racial_group," Residents (2010 - 2017)"), 
+    labs(title = "Difference in Stop and Frisk Rate & Population",
+         subtitle = paste("among", racial_group,"Residents (2010 - 2017)"), 
          y = 'Stop & Frisk - Population',
          x="Neighborhood",size="Total Stop & Frisk",color=paste("Neighborhood %",racial_group)) +
     theme(plot.title = element_text(hjust = 0.5),

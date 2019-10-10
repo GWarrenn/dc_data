@@ -1,0 +1,137 @@
+<html>
+  <head>
+    <title>DC Places of Worship</title>
+
+    <script src="https://unpkg.com/deck.gl@^7.0.0/dist.min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v0.50.0/mapbox-gl.js"></script>
+
+    <style type="text/css">
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+        width: 100vw;
+        height: 100vh;
+        margin: 0;
+      }
+
+      #control-panel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin: 12px;
+        padding: 20px;
+        font-size: 12px;
+        line-height: 1.5;
+        z-index: 1;
+        background: #fff;
+        font-family: Helvetica, Arial, sans-serif;
+        box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
+      }
+
+      label {
+        display: inline-block;
+        width: 140px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="control-panel">
+      <div>
+        <label>Radius</label>
+        <input id="radius" type="range" min="300" max="2000" step="100" value="300"></input>
+        <span id="radius-value"></span>
+      </div>
+      <div>
+        <label>Fill Opacity</label>
+        <input id="opacity" type="range" min="0" max="1" step=".01" value=".50"></input>
+        <span id="opacity-value"></span>
+      </div>      
+    </div>
+  </body>
+
+  <script type="text/javascript">
+
+    const {DeckGL, ScatterplotLayer} = deck;
+
+    const deckgl = new DeckGL({
+      mapboxApiAccessToken: 'pk.eyJ1IjoiZ3dhcnJlbm4iLCJhIjoiY2p4d294Z2xhMGh4czNub2N1c202dnNvdCJ9.iRGx2PURnTzXBHgRIH2zKg',
+      mapStyle: 'mapbox://styles/mapbox/light-v10',
+      longitude: -77.0369,
+      latitude: 38.9072,
+      zoom: 11,
+      minZoom: 5,
+      maxZoom: 15
+    });
+
+    let data = null;
+
+    const OPTIONS = ['radius','opacity'];
+
+    OPTIONS.forEach(key => {
+      document.getElementById(key).oninput = renderLayer;
+    });
+
+    const COLOR_RANGE = [
+      [0, 0, 4, 223],
+      [20, 11, 53, 239],
+      [58, 9, 99],
+      [96, 19, 110],
+      [133, 33, 107],
+      [169, 46, 94],
+      [203, 65, 73],
+      [230, 93, 47],
+      [247, 131, 17],
+      [252, 173, 18],
+      [245, 219, 75],
+      [252, 255, 164]
+    ];
+
+    function renderLayer () {
+      const options = {};
+      OPTIONS.forEach(key => {
+        const value = document.getElementById(key).value;
+        document.getElementById(key + '-value').innerHTML = value;
+        options[key] = Number(value);
+      });
+
+      const hexagonLayer = new HexagonLayer({
+        id: 'heatmap',
+        //colorRange: default,
+        data,
+        getPosition: d => d,
+        ...options
+      });
+
+      const scatterLayer = new ScatterplotLayer({
+          id: 'scatter-plot',
+          data,
+          radiusScale: 50,
+          radiusMinPixels: 0.5,
+          getPosition: d => d,
+          ...options
+        }) 
+    deckgl.setProps({
+        layers: [hexagonLayer,scatterLayer]
+      });
+
+    }
+
+    d3.csv('Places_of_Worship.csv')
+      .then(response => {
+      response = response.filter(function (item) {
+        return item.RELIGION === "CHRISTIAN";
+      });
+
+      console.log(data)
+
+      data = response.map(d => [Number(d.X), Number(d.Y)]);
+
+      console.log(data)
+
+      renderLayer();
+    });
+
+  </script>
+</html>

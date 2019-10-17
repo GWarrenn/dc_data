@@ -118,7 +118,7 @@
 
     }
 
-    d3.csv('Places_of_Worship.csv')
+    d3.csv('https://raw.githubusercontent.com/GWarrenn/dc_data/master/04_churches/data/Places_of_Worship.csv')
       .then(response => {
       response = response.filter(function (item) {
         return item.RELIGION === "CHRISTIAN";

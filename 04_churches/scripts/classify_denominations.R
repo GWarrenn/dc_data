@@ -52,7 +52,8 @@ places_of_worship_edits <- merge(places_of_worship,manual_fixes,by=c("NAME","WEB
 
 places_of_worship_edits$denomination <- ifelse(places_of_worship_edits$denomination == "",as.character(places_of_worship_edits$manual_lookup),places_of_worship_edits$denomination)
 
-places_of_worship_edits$denomination <- ifelse(is.na(places_of_worship_edits$denomination),as.character(places_of_worship_edits$RELIGION),places_of_worship_edits$denomination)
+places_of_worship_edits <- places_of_worship_edits%>%
+  rename (X = ï..X) 
 
 ## export data
 

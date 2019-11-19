@@ -1,6 +1,6 @@
 library(tidyverse)
 
-places_of_worship <- read.csv("C:/Users/augus/Desktop/religion_in_dc/Places_of_Worship.csv")
+places_of_worship <- read.csv("data/Places_of_Worship.csv")
 
 head(places_of_worship$NAME)
 
@@ -38,5 +38,23 @@ manual_look_ups <- places_of_worship %>%
   filter(denomination == "" & RELIGION == "CHRISTIAN") %>%
   select(NAME,WEB_URL,ADDRESS)
 
-write.csv(file = "C:/Users/augus/Desktop/religion_in_dc/manual_lookups.csv",x = manual_look_ups)
+write.csv(file = "data/manual_lookups.csv",x = manual_look_ups)
   
+##############################################################
+##
+## now merge in manual look-ups
+##
+##############################################################
+
+manual_fixes <- read.csv("data/manual_lookups_edited.csv")
+
+places_of_worship_edits <- merge(places_of_worship,manual_fixes,by=c("NAME","WEB_URL","ADDRESS"),all.x = T)
+
+places_of_worship_edits$denomination <- ifelse(places_of_worship_edits$denomination == "",as.character(places_of_worship_edits$manual_lookup),places_of_worship_edits$denomination)
+
+places_of_worship_edits$denomination <- ifelse(is.na(places_of_worship_edits$denomination),as.character(places_of_worship_edits$RELIGION),places_of_worship_edits$denomination)
+
+## export data
+
+write.csv(file = "data/Places_of_Worship_GW.csv",x = places_of_worship_edits)
+

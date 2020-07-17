@@ -191,11 +191,15 @@ crime_counts <- crime_df %>%
   summarise(n=n()) %>%
   mutate(pct=n/sum(n))
 
+crime_counts$violent_crime = ifelse(crime_counts$OFFENSE == "homicide" |
+                                    crime_counts$OFFENSE == "sex abuse" | 
+                                    crime_counts$OFFENSE == "assault w/dangerous weapon" |
+                                    crime_counts$OFFENSE == "robbery",1,0)
 
 ggplot(crime_counts,aes(x=OFFENSE,y=pct)) +
   geom_bar(stat="identity") +
   geom_text(aes(x=OFFENSE,y=pct,label=percent(pct)),vjust=-.5) +
-  facet_grid(stay_at_home~.)
+  facet_grid(stay_at_home~violent_crime,scales="free")
 
 #############################################################
 ##

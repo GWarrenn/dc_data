@@ -182,6 +182,21 @@ change_ward_plots <- grid.arrange(ward_violent,ward_nonviolent,ncol=2,
 
 ggsave(plot = change_ward_plots, "images/change_ward_plots_20200623.png", w = 12, h = 6,type = "cairo-png")
 
+## Type of crime 
+
+crime_counts <- crime_df %>%
+  mutate(stay_at_home = if_else(month<4,"Pre-Stay At Home Order",
+                                if_else(month >= 6,"Post-George Floyd Murder","Post-Stay At Home Order"))) %>%
+  group_by(stay_at_home,OFFENSE) %>%
+  summarise(n=n()) %>%
+  mutate(pct=n/sum(n))
+
+
+ggplot(crime_counts,aes(x=OFFENSE,y=pct)) +
+  geom_bar(stat="identity") +
+  geom_text(aes(x=OFFENSE,y=pct,label=percent(pct)),vjust=-.5) +
+  facet_grid(stay_at_home~.)
+
 #############################################################
 ##
 ## MAPPING

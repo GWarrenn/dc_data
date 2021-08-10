@@ -1,5 +1,6 @@
 library(tidyverse)
 library(jsonlite)
+library(httr)
 library(zoo)
 library(gridExtra)
 library(grid)
@@ -16,18 +17,23 @@ api_data <- GET("https://opendata.arcgis.com/datasets/f08294e5286141c293e9202fcd
 crime_2019 <- fromJSON(rawToChar(api_data$content))
 crime_2019 <- crime_2019$features$properties
 
-crime_df <- rbind(crime_2020,crime_2019)
+api_data <- GET("https://opendata.arcgis.com/datasets/619c5bd17ca2411db0689bb0a211783c_3.geojson")
 
-crime_df$month <- as.numeric(format(as.Date(crime_df$REPORT_DAT,"%Y/%m/%d"), "%m"))
-crime_df$Year <- format(as.Date(crime_df$REPORT_DAT,"%Y/%m/%d"), "%Y")
-crime_df$day_numeric <- format(as.Date(crime_df$REPORT_DAT,"%Y/%m/%d"), "%d")
+crime_2021 <- fromJSON(rawToChar(api_data$content))
+crime_2021 <- crime_2021$features$properties
+
+crime_df <- rbind(crime_2020,crime_2019,crime_2021)
+
+crime_df$month <- as.numeric(format(as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%dT%H:%M:%S"), "%m"))
+crime_df$Year <- format(as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%dT%H:%M:%S"), "%Y")
+crime_df$day_numeric <- format(as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%dT%H:%M:%S"), "%d")
 crime_df$year_month <- as.Date(paste0(crime_df$month,"/","01/",as.numeric(crime_df$Year),sep=""),"%m/%d/%Y")
 
-crime_df$day <- as.Date(crime_df$REPORT_DAT,"%Y/%m/%d")
-crime_df$day_no_year <- format(as.Date(crime_df$REPORT_DAT,"%Y/%m/%d"),"%m/%d")
+crime_df$day <- as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%d")
+crime_df$day_no_year <- format(as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%dT%H:%M:%S"),"%m/%d")
 
 crime_df <- crime_df %>%
-  filter(Year != "2017" & ((month < 11) | (month == 11 & day_numeric <= 15)))
+  filter(Year != "2017")
 
 crime_df$OFFENSE <- tolower(crime_df$OFFENSE)
 
@@ -136,7 +142,6 @@ p2_nonviolent <- ggplot(crime_by_day,aes(x=as.Date(paste(2020,strftime(day,forma
                date_minor_breaks = "1 month",
                date_labels = "%b")
 
-
 change_plots <- grid.arrange(p2_violent,p2_nonviolent,ncol=2,
                              bottom = textGrob("Source: Washington MPD Crime Incident Data | Viz: August Warren (gwarrenn.github.io) | Stay At Home Order issued April 1st & Lifted May 29th",
                                                x = 0,
@@ -152,8 +157,11 @@ change_plots <- grid.arrange(p2_violent,p2_nonviolent,ncol=2,
 
 ggsave(plot = change_plots, "images/covid_avg_crime_20201115.png", w = 12, h = 6)
 
+######################################################
+##
 ## breaking up violent crimes
-
+##
+######################################################
 
 p3_homicide <- ggplot(crime_by_day,aes(x=as.Date(paste(2020,strftime(day,format="%m-%d"),sep="-")),
                                       y=moving_avg_homicide_assault,
@@ -208,6 +216,84 @@ crime_df %>%
   group_by(Year) %>%
   summarise(total_hom = sum(homicide_assault),
             total_rob = sum(robbery_sa))
+
+## Now actually look at covid cases?
+
+api_data = GET("https://em.dcgis.dc.gov/dcgis/rest/services/COVID_19/OpenData_COVID19/FeatureServer/3/query?where=1%3D1&outFields=*&outSR=4326&f=json")
+
+dc_positives <- fromJSON(rawToChar(api_data$content))
+dc_positives <- dc_positives$features$attributes
+
+dc_positives <- dc_positives %>%
+  filter(!is.na(TOTAL_POSITIVES_TST)) %>%
+  mutate(prev_day_total = lag(TOTAL_POSITIVES_TST),
+         adj_total = if_else(condition = prev_day_total > TOTAL_POSITIVES_TST,true = prev_day_total,TOTAL_POSITIVES_TST),
+         total_new_cases = adj_total - prev_day_total,
+         moving_avg_new_cases = rollapply(total_new_cases,14,mean,align='right',fill=NA),
+         day = as.Date(as.POSIXct(DATE_REPORTED / 1000, origin="1970-01-01")),
+         type="General Population") %>%
+  select(day,adj_total,total_new_cases,moving_avg_new_cases,type)
+
+dc_positives$day <- dc_positives$day - 14
+#crime_covid_by_day$day <- crime_covid_by_day$day - 14
+
+crime_covid_by_day <- merge(crime_by_day,dc_positives,by="day") %>%
+  select(day,moving_avg_new_cases,moving_avg_violent)
+
+crime_covid_by_day$lock_down <- ifelse(crime_covid_by_day$day >= as.Date("2020-04-01") & crime_covid_by_day$day <= as.Date("2020-05-29"),
+                                       "Stay at home","Stay at Home Lifted")
+
+r2 <- crime_covid_by_day %>%
+  group_by(lock_down) %>%
+  summarise(r2 = cor(x = moving_avg_new_cases,y=moving_avg_violent,use = "complete.obs"))
+
+covid_violent_crime_r2 <- ggplot(crime_covid_by_day,aes(x=moving_avg_new_cases,y=moving_avg_violent,color=lock_down)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(x="Average of New Positive COVID Cases over 14-Day Period",
+       y="Average of Violent Crimes over 14-Day Period",
+       title="Violent Crimes & COVID Positive Cases",
+       subtitle = "Lagged effect of average COVID cases on violent crime",
+       caption = paste0("Stay at Home R-Squared: ",round(filter(r2,lock_down == "Stay at home")[2],2),
+                         " | Post-Stay at Home R-Squared: ",round(filter(r2,lock_down == "Stay at Home Lifted")[2],2))) +
+  theme(legend.position = "bottom")
+
+ggsave(plot = covid_violent_crime_r2, "images/covid_violent_crime_r2.png", w = 12, h = 12)
+
+crime_covid_by_day$day_number <- as.numeric(format(crime_covid_by_day$day,"%j"))
+
+summary(lm(data = crime_covid_by_day,
+   formula = moving_avg_violent ~ moving_avg_new_cases + lock_down + day_number))
+
+## by ward
+
+scaling <- .1
+
+ggplot(crime_covid_by_day,aes(x=as.Date(paste(2020,strftime(day,format="%m-%d"),sep="-")))) + 
+  geom_line(aes(y=moving_avg_new_cases),color="darkblue") +
+  geom_line(aes(y=moving_avg_violent/scaling),color="darkred") +
+  scale_y_continuous(
+    # Add a second axis and specify its features
+    sec.axis = sec_axis(~.*scaling, name="Moving Avergae Violent Crimes")
+  ) +
+  geom_vline(xintercept = as.Date("2020-04-01","%Y-%m-%d")) +
+  geom_vline(xintercept = as.Date("2020-05-29","%Y-%m-%d"),linetype='dashed') +
+  labs(x="Date",
+       y="Average Number of Violent Crimes",
+       title="Violent Crimes",
+       color="Year") +
+  theme_bw() +
+  theme(legend.position = "bottom") +
+  scale_x_date(date_breaks = "2 months",
+               date_minor_breaks = "1 month",
+               date_labels = "%b")
+
+api_data <- GET("https://opendata.arcgis.com/datasets/94b5ab3b8b334d31aa395aea9bef2c10_27.geojson")
+
+covid_cases_ward <- fromJSON(rawToChar(api_data$content))
+covid_cases_ward <- covid_cases_ward$features$properties
+
+covid_cases_ward
 
 #############################################################
 ##

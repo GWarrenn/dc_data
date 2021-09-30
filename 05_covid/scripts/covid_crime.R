@@ -237,6 +237,8 @@ dc_positives <- dc_positives %>%
 dc_positives$day <- dc_positives$day - 14
 #crime_covid_by_day$day <- crime_covid_by_day$day - 14
 
+crime_by_day$day <- as.Date(crime_by_day$day,"%Y-%m-%d")
+
 crime_covid_by_day <- merge(crime_by_day,dc_positives,by="day") %>%
   select(day,moving_avg_new_cases,moving_avg_violent)
 

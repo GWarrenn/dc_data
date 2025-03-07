@@ -3,6 +3,9 @@ library("tidyverse")
 library("rgdal")
 library("sf")
 library("FITfileR")
+library("trackeR")
+
+library("parallel")
 
 ##################################################
 ##
@@ -11,11 +14,11 @@ library("FITfileR")
 ##
 ##################################################
 
-all_national_parks <- readOGR("Downloads/National_Parks/",
+all_national_parks <- readOGR("dc_data/data/National_Parks/",
                               layer="National_Parks")
 
 rcp_shp <- all_national_parks[all_national_parks$NAME == "Rock Creek Park & Piney Branch Parkway" & !is.na(all_national_parks$NAME), ]
-rcp_shp <- rcp_shp[rcp_shp$GIS_ID == "Nps_545" & !is.na(rcp_shp$NAME), ]
+#rcp_shp <- rcp_shp[rcp_shp$GIS_ID == "Nps_545" & !is.na(rcp_shp$NAME), ]
 
 rcp_shp_plot <- spTransform(rcp_shp, CRSobj = "+proj=utm +zone=50 +north +ellps=WGS84") %>%
   st_as_sf(rcp_shp_plot)
@@ -27,7 +30,7 @@ rcp_shp_plot <- spTransform(rcp_shp, CRSobj = "+proj=utm +zone=50 +north +ellps=
 ##
 ##################################################
 
-activities <- read.csv("github/fancy-racehorse/mapping/export_4778598_RCP/activities.csv")
+activities <- read.csv("dc_data/08_rcp/export_4778598/activities.csv")
 
 activities <- activities %>%
   mutate(activity_date = as.POSIXct(activities$Activity.Date,format="%b %d, %Y, %H:%M:%S %p")) %>%
@@ -37,39 +40,41 @@ files <- activities$Filename
 
 ##################################################
 ##
-## Determining time spent in RCP
+## Classification function to parallelize across cores
 ##
 ##################################################
 
-total_time_secs <- 0
-total_weekend_time <- 0
-total_weekday_time <- 0 
-
-all_data <- data.frame()
-
-for(file in files){
+classify_rcp <- function(file){
+  
+  total_time_secs <- 0
+  total_weekend_time <- 0
+  total_weekday_time <- 0 
+  
+  label <- activities %>% filter(Filename == file) %>% select(Activity.Name)
   
   ## GPX file processing
   
-  if(grepl("gpx|fit|tcx", file)){
+  if(grepl("gpx", file)){ #|fit|tcx
+    
+    print(paste("Processing:",label$Activity.Name[1]))
     
     total_time_in_rcp <- 0
     
-    print(paste0("Processing: github/fancy-racehorse/mapping/export_4778598_RCP/",file))
+    print(paste0("Processing: dc_data/08_rcp/export_4778598/",file))
     
     if(grepl("gpx", file, fixed = TRUE)){
       
-      route <- plotKML::readGPX(gpx.file = paste0("github/fancy-racehorse/mapping/export_4778598_RCP/",file))
+      route <- plotKML::readGPX(gpx.file = paste0("dc_data/08_rcp/export_4778598/",file))
       
       route_df <- as.data.frame(route$tracks[[1]][[1]])
       
     }
     
-    else if(grepl("tcx", file, fixed = TRUE)){
+    else if(grepl("tcx$", file, fixed = TRUE)){
       
       file <- sub(pattern = "tcx.gz",replacement = "tcx",x = file)
       
-      route <- readTCX(paste0("github/fancy-racehorse/mapping/export_4778598_RCP/",file))
+      route <- readTCX(paste0("dc_data/08_rcp/export_4778598/",file))
       
       route_df <- route %>%
         arrange(time) %>%
@@ -86,7 +91,7 @@ for(file in files){
       
       file <- sub(pattern = "fit.gz",replacement = "fit",x = file)
       
-      route <- readFitFile(paste0("github/fancy-racehorse/mapping/export_4778598_RCP/",file))
+      route <- readFitFile(paste0("dc_data/08_rcp/export_4778598/",file))
       
       route_df <- records(route) %>% 
         bind_rows() %>% 
@@ -127,7 +132,7 @@ for(file in files){
     
     print(paste0("Total time in RCP: ",as.character(total_time_in_rcp)," seconds"))
     
-    total_time_secs <- total_time_in_rcp + total_time_secs
+    #total_time_secs <- total_time_in_rcp + total_time_secs
     
     if(weekdays(as.Date(intersection$time_fmt[1],format="%Y-%m-%d")) %in% c("Saturday","Sunday")){
       total_weekend_time <- total_weekend_time + total_time_in_rcp
@@ -138,13 +143,13 @@ for(file in files){
     
     ride_df <- data.frame(ride_date = intersection$time_fmt[1],
                           ride_dow = weekdays(as.Date(intersection$time_fmt[1],format="%Y-%m-%d")),
-                          total_time_in_rcp = total_time_in_rcp,
-                          cumulative_time = total_time_secs)
-    
-    all_data <- rbind(all_data,ride_df)
-    
+                          total_time_in_rcp = total_time_in_rcp)
   }
 }
+
+classified_results <- mclapply(files, classify_rcp, mc.cores=8)
+
+all_data <- do.call("rbind", classified_results)
 
 all_data <- all_data %>% filter(!is.na(ride_date))
 

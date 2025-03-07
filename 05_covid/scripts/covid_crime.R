@@ -22,6 +22,24 @@ api_data <- GET("https://opendata.arcgis.com/datasets/619c5bd17ca2411db0689bb0a2
 crime_2021 <- fromJSON(rawToChar(api_data$content))
 crime_2021 <- crime_2021$features$properties
 
+#api_data <- GET("https://maps2.dcgis.dc.gov/dcgis/rest/services/FEEDS/MPD/MapServer/4/query?outFields=*&where=1%3D1&f=geojson")
+
+crime_2022 <- read_csv("data/Crime_Incidents_in_2022.csv") %>%
+  subset(select = -c(X,Y) )
+
+crime_2023 <- read_csv("data/Crime_Incidents_in_2023.csv") %>%
+  subset(select = -c(X,Y) )
+
+crime_csv <- rbind(crime_2022,crime_2023)
+
+crime_csv$month <- as.numeric(format(as.POSIXct(crime_csv$REPORT_DAT,format="%Y/%m/%d %H:%M:%S"), "%m"))
+crime_csv$Year <- format(as.POSIXct(crime_csv$REPORT_DAT,format="%Y/%m/%d %H:%M:%S"), "%Y")
+crime_csv$day_numeric <- format(as.POSIXct(crime_csv$REPORT_DAT,format="%Y/%m/%d %H:%M:%S"), "%d")
+crime_csv$year_month <- as.Date(paste0(crime_csv$month,"/","01/",as.numeric(crime_csv$Year),sep=""),"%m/%d/%Y")
+
+crime_csv$day <- as.POSIXct(crime_csv$REPORT_DAT,format="%Y/%m/%d")
+crime_csv$day_no_year <- format(as.POSIXct(crime_csv$REPORT_DAT,format="%Y/%m/%d %H:%M:%S"),"%m/%d")
+
 crime_df <- rbind(crime_2020,crime_2019,crime_2021)
 
 crime_df$month <- as.numeric(format(as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%dT%H:%M:%S"), "%m"))
@@ -31,6 +49,8 @@ crime_df$year_month <- as.Date(paste0(crime_df$month,"/","01/",as.numeric(crime_
 
 crime_df$day <- as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%d")
 crime_df$day_no_year <- format(as.POSIXct(crime_df$REPORT_DAT,format="%Y-%m-%dT%H:%M:%S"),"%m/%d")
+
+crime_df <- rbind(crime_df,crime_csv)
 
 crime_df <- crime_df %>%
   filter(Year != "2017")
@@ -123,7 +143,7 @@ violent_crime_by_ward <- ggplot(wards,aes(x=as.Date(paste(2020,strftime(day,form
                date_minor_breaks = "1 month",
                date_labels = "%b")
 
-ggsave(plot = violent_crime_by_ward, "images/violent_crime_by_ward_20201115.png", w = 12, h = 6)
+ggsave(plot = violent_crime_by_ward, "images/violent_crime_by_ward_20231130.png", w = 12, h = 6)
 
 p2_nonviolent <- ggplot(crime_by_day,aes(x=as.Date(paste(2020,strftime(day,format="%m-%d"),sep="-")),
                               y=moving_avg_nonviolent,
@@ -155,7 +175,7 @@ change_plots <- grid.arrange(p2_violent,p2_nonviolent,ncol=2,
                                       gp = gpar(fontsize = 18)
                              ))
 
-ggsave(plot = change_plots, "images/covid_avg_crime_20201115.png", w = 12, h = 6)
+ggsave(plot = change_plots, "images/covid_avg_crime_20231130.png", w = 12, h = 6)
 
 ######################################################
 ##

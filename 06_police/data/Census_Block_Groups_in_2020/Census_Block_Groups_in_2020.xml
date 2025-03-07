@@ -1,0 +1,1684 @@
+<?xml version="1.0" encoding="UTF-8"?><metadata>
+    <idinfo>
+        <citation>
+            <citeinfo>
+                <origin/>
+                <pubdate>20210901</pubdate>
+                <title>Census Block Groups in 2020</title>
+                <geoform>vector digital data</geoform>
+                <othercit>The TIGER/Line shapefiles are an extract of selected geographic and cartographic information from the U.S. Census Bureau's Master Address File / Topologically Integrated Geographic Encoding and Referencing (MAF/TIGER) Database (MTDB). The MTDB represents a seamless national file with no overlaps or gaps between parts, however, each TIGER/Line shapefile is designed to stand alone as an independent data set, or they can be combined to cover the entire nation. Census tracts are small, relatively permanent statistical subdivisions of a county or equivalent entity, and were defined by local participants as part of the 2020 Census Participant Statistical Areas Program. The Census Bureau delineated the census tracts in situations where no local participant existed or where all the potential participants declined to participate. The primary purpose of census tracts is to provide a stable set of geographic units for the presentation of census data and comparison back to previous decennial censuses. Census tracts generally have a population size between 1,200 and 8,000 people, with an optimum size of 4,000 people. When first delineated, census tracts were designed to be homogeneous with respect to population characteristics, economic status, and living conditions. The spatial size of census tracts varies widely depending on the density of settlement. Physical changes in street patterns caused by highway construction, new development, and so forth, may require boundary revisions. In addition, census tracts occasionally are split due to population growth, or combined as a result of substantial population decline. Census tract boundaries generally follow visible and identifiable features. They may follow legal boundaries such as minor civil division (MCD) or incorporated place boundaries in some States and situations to allow for census tract-to-governmental unit relationships where the governmental boundaries tend to remain unchanged between censuses. State and county boundaries always are census tract boundaries in the standard census geographic hierarchy. In a few rare instances, a census tract may consist of noncontiguous areas. These noncontiguous areas may occur where the census tracts are coextensive with all or parts of legal entities that are themselves noncontiguous. For the 2020 Census, the census tract code range of 9400 through 9499 was enforced for census tracts that include a majority American Indian population according to Census 2010 data and/or their area was primarily covered by federally recognized American Indian reservations and/or off-reservation trust lands; the code range 9800 through 9899 was enforced for those census tracts that contained little or no population and represented a relatively large special land use area such as a National Park, military installation, or a business/industrial park; and the code range 9900 through 9998 was enforced for those census tracts that contained only water area.</othercit>
+            </citeinfo>
+        </citation>
+        <descript>
+            <abstract>Standard block groups are clusters of blocks within the same census tract that have the same first digit of their 4-character census block number (e.g., Blocks 3001, 3002, 3003 to 3999 in census tract 1210.02 belong to block group 3). Current block groups do not always maintain these same block number to block group relationships due to boundary and feature changes that occur throughout the decade. For example, block 3001 might move due to a change in the census tract boundary. Even if the block is no longer in block group 3, the block number (3001) will not change. However, the GEOID for that block, identifying block group 3, would remain the same in the attribute information in the TIGER/Line Shapefiles because block GEOIDs are always built using the decennial geographic codes.Block groups delineated for the 2020 Census generally contain 600 to 3,000 people. Local participants delineated most block groups as part of the Census Bureau's PSAP. The Census Bureau delineated block groups only where a local or tribal government declined to participate or where the Census Bureau could not identify a potential local participant.A block group usually covers a contiguous area. Each census tract contains one or more block groups and block groups have unique numbers within census tract. Within the standard census geographic hierarchy, block groups never cross county or census tract boundaries, but may cross the boundaries of county subdivisions, places, urban areas, voting districts, congressional districts, and AIANNH areas.Block groups have a valid range of zero (0) through nine (9). Block groups beginning with a zero generally are in coastal and Great Lakes water and territorial seas. Rather than extending a census tract boundary into the Great Lakes or out to the 3-mile territorial sea limit, the Census Bureau delineated some census tract boundaries along the shoreline or just offshore.</abstract>
+            <purpose>Census Block Groups in 2020. Standard block groups are clusters of blocks within the same census tract that have the same first digit of their 4-character census block number. Block groups delineated for the 2020 Census generally contain 600 to 3,000 people. Local participants delineated most block groups as part of the Census Bureau's PSAP. The Census Bureau delineated block groups only where a local or tribal government declined to participate or where the Census Bureau could not identify a potential local participant.</purpose>
+        </descript>
+        <status>
+            <update>As needed</update>
+        </status>
+        <spdom>
+            <bounding>
+                <westbc>-77.119862</westbc>
+                <eastbc>-76.909262</eastbc>
+                <northbc>38.995852</northbc>
+                <southbc>38.791590</southbc>
+            </bounding>
+        </spdom>
+        <keywords>
+            <theme>
+                <themekt>None</themekt>
+                <themekey>census blocks</themekey>
+                <themekey>demographics</themekey>
+                <themekey>washington dc</themekey>
+                <themekey>district of columbia</themekey>
+                <themekey>age</themekey>
+                <themekey>population</themekey>
+                <themekey>housing units</themekey>
+                <themekey>race</themekey>
+            </theme>
+        </keywords>
+        <accconst>None</accconst>
+        <useconst>This work is licensed under a Creative Commons Attribution 4.0 International License.</useconst>
+        <ptcontac>
+            <cntinfo>
+                <cntorgp>
+                    <cntorg>D.C. Office of the Chief Technology Officer</cntorg>
+                    <cntper>GIS Coordinator</cntper>
+                </cntorgp>
+                <cntaddr>
+                    <addrtype>mailing and physical</addrtype>
+                    <address>200 I Street SE, 5th Floor</address>
+                    <city>Washington</city>
+                    <state>DC</state>
+                    <postal>20001</postal>
+                </cntaddr>
+                <cntvoice>202-727-5660</cntvoice>
+                <cntemail>dcgis@dc.gov</cntemail>
+            </cntinfo>
+        </ptcontac>
+        <datacred>https://www.census.gov, https://planning.dc.gov</datacred>
+    </idinfo>
+    <spdoinfo>
+        <direct>Vector</direct>
+        <ptvctinf>
+            <sdtsterm>
+                <sdtstype>GT-polygon composed of chains</sdtstype>
+                <ptvctcnt>0</ptvctcnt>
+            </sdtsterm>
+        </ptvctinf>
+    </spdoinfo>
+    <eainfo>
+        <detailed>
+            <enttyp>
+                <enttypl>Census Blocks in 2020</enttypl>
+            </enttyp>
+            <attr>
+                <attrlabl>OBJECTID</attrlabl>
+                <attrdef>Internal feature number.</attrdef>
+                <attrdefs>Esri</attrdefs>
+                <attrdomv>
+                                                  
+                    
+                    <udom>Sequential unique whole numbers that are automatically generated.</udom>
+                                                
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>Shape</attrlabl>
+                <attrdef>Feature geometry.</attrdef>
+                <attrdefs>Esri</attrdefs>
+                <attrdomv>
+                                                  
+                    
+                    <udom>Coordinates defining the features.</udom>
+                                                
+                
+                </attrdomv>
+            </attr>
+            <attr>
+                <attrlabl>TRACT</attrlabl>
+                <attrdef>Census Tract</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>ALAND</attrlabl>
+                <attrdef>Area Land</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>AWATER</attrlabl>
+                <attrdef>Area Water</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>Shape_Leng</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>STUSAB</attrlabl>
+                <attrdef>State/US-Abbreviation (USPS)</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>SUMLEV</attrlabl>
+                <attrdef>Summary Level</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>GEOID</attrlabl>
+                <attrdef>Geographic Record Identifier</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>GEOCODE</attrlabl>
+                <attrdef>Geographic Code Identifier</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>STATE</attrlabl>
+                <attrdef>State (FIPS)</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>BLKGRP</attrlabl>
+                <attrdef>Block Group</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>NAME</attrlabl>
+                <attrdef>Area Name-Legal/Statistical Area Description (LSAD) Term-Part Indicator</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>POP100</attrlabl>
+                <attrdef>Population Count (100%)</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>HU100</attrlabl>
+                <attrdef>Housing Unit Count (100%)</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010001</attrlabl>
+                <attrdef>Total Population</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010002</attrlabl>
+                <attrdef>Total Population: Population of one race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010003</attrlabl>
+                <attrdef>Total Population: Population of one race: White alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010004</attrlabl>
+                <attrdef>Total Population: Population of one race: Black or African American alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010005</attrlabl>
+                <attrdef>Total Population: Population of one race: American Indian and Alaska Native alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010006</attrlabl>
+                <attrdef>Total Population: Population of one race: Asian alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010007</attrlabl>
+                <attrdef>Total Population: Population of one race: Native Hawaiian and Other Pacific Islander alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010008</attrlabl>
+                <attrdef>Total Population: Population of one race: Some Other Race alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010009</attrlabl>
+                <attrdef>Total Population: Population of two or more races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010010</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Population of two races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010011</attrlabl>
+                <attrdef>Total Population: Population of two or more races: White; Black or African American</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010012</attrlabl>
+                <attrdef>Total Population: Population of two or more races: White; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010013</attrlabl>
+                <attrdef>Total Population: Population of two or more races: White; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010014</attrlabl>
+                <attrdef>Total Population: Population of two or more races: White; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010015</attrlabl>
+                <attrdef>Total Population: Population of two or more races: White; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010016</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010017</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010018</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010019</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010020</attrlabl>
+                <attrdef>Total Population: Population of two or more races: American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010021</attrlabl>
+                <attrdef>Total Population: Population of two or more races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010022</attrlabl>
+                <attrdef>Total Population: Population of two or more races: American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010023</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010024</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010025</attrlabl>
+                <attrdef>Total Population: Population of two or more races: Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010026</attrlabl>
+                <attrdef>Total Population: Population of three races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010027</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010028</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010029</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010030</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010031</attrlabl>
+                <attrdef>Total Population: Population of three races: White; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010032</attrlabl>
+                <attrdef>Total Population: Population of three races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010033</attrlabl>
+                <attrdef>Total Population: Population of three races: White; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010034</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010035</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010036</attrlabl>
+                <attrdef>Total Population: Population of three races: White; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010037</attrlabl>
+                <attrdef>Total Population: Population of three races: Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010038</attrlabl>
+                <attrdef>Total Population: Population of three races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010039</attrlabl>
+                <attrdef>Total Population: Population of three races: Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010040</attrlabl>
+                <attrdef>Total Population: Population of three races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010041</attrlabl>
+                <attrdef>Total Population: Population of three races: Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010042</attrlabl>
+                <attrdef>Total Population: Population of three races: Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010043</attrlabl>
+                <attrdef>Total Population: Population of three races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010044</attrlabl>
+                <attrdef>Total Population: Population of three races: American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010045</attrlabl>
+                <attrdef>Total Population: Population of three races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010046</attrlabl>
+                <attrdef>Total Population: Population of three races: Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010047</attrlabl>
+                <attrdef>Total Population: Population of four races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010048</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010049</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010050</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010051</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010052</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010053</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010054</attrlabl>
+                <attrdef>Total Population: Population of four races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010055</attrlabl>
+                <attrdef>Total Population: Population of four races: White; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010056</attrlabl>
+                <attrdef>Total Population: Population of four races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010057</attrlabl>
+                <attrdef>Total Population: Population of four races: White; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010058</attrlabl>
+                <attrdef>Total Population: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010059</attrlabl>
+                <attrdef>Total Population: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010060</attrlabl>
+                <attrdef>Total Population: Population of four races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010061</attrlabl>
+                <attrdef>Total Population: Population of four races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010062</attrlabl>
+                <attrdef>Total Population: Population of four races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010063</attrlabl>
+                <attrdef>Total Population: Population of five races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010064</attrlabl>
+                <attrdef>Total Population: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010065</attrlabl>
+                <attrdef>Total Population: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010066</attrlabl>
+                <attrdef>Total Population: Population of five races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010067</attrlabl>
+                <attrdef>Total Population: Population of five races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010068</attrlabl>
+                <attrdef>Total Population: Population of five races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010069</attrlabl>
+                <attrdef>Total Population: Population of five races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010070</attrlabl>
+                <attrdef>Total Population: Population of five races: Population of six races:</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0010071</attrlabl>
+                <attrdef>Total Population: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020001</attrlabl>
+                <attrdef>Total Population</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020002</attrlabl>
+                <attrdef>Total Population: Hispanic or Latino</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020003</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020004</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of one race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020005</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: White alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020006</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Black or African American alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020007</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: American Indian and Alaska Native alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020008</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Asian alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020009</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Native Hawaiian and Other Pacific Islander alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020010</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Some Other Race alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020011</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020012</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Population of two races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020013</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: White; Black or African American</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020014</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: White; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020015</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: White; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020016</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: White; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020017</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: White; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020018</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020019</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020020</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020021</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020022</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020023</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020024</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020025</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020026</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020027</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of two or more races: Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020028</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020029</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020030</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020031</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020032</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020033</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020034</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020035</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020036</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020037</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020038</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: White; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020039</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020040</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020041</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020042</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020043</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020044</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020045</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020046</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020047</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020048</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of three races: Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020049</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020050</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020051</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020052</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020053</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020054</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020055</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020056</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020057</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020058</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020059</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: White; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020060</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020061</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020062</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020063</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020064</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of four races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020065</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020066</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020067</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:: White; Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020068</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020069</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020070</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020071</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of five races:: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020072</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of six races:</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0020073</attrlabl>
+                <attrdef>Total Population: Not Hispanic or Latino: Population of six races:: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030001</attrlabl>
+                <attrdef>Total Population over 18</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030002</attrlabl>
+                <attrdef>Total Population over 18: Population of one race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030003</attrlabl>
+                <attrdef>Total Population over 18: Population of one race: White alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030004</attrlabl>
+                <attrdef>Total Population over 18: Population of one race: Black or African American alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030005</attrlabl>
+                <attrdef>Total Population over 18: Population of one race: American Indian and Alaska Native alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030006</attrlabl>
+                <attrdef>Total Population over 18: Population of one race: Asian alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030007</attrlabl>
+                <attrdef>Total Population over 18: Population of one race: Native Hawaiian and Other Pacific Islander alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030008</attrlabl>
+                <attrdef>Total Population over 18: Population of one race: Some Other Race alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030009</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030010</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Population of two races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030011</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: White; Black or African American</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030012</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: White; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030013</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: White; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030014</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: White; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030015</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: White; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030016</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030017</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030018</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030019</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030020</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030021</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030022</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030023</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030024</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030025</attrlabl>
+                <attrdef>Total Population over 18: Population of two or more races: Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030026</attrlabl>
+                <attrdef>Total Population over 18: Population of three races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030027</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030028</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030029</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030030</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030031</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030032</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030033</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030034</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030035</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030036</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: White; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030037</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030038</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030039</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030040</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030041</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030042</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030043</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030044</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030045</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030046</attrlabl>
+                <attrdef>Total Population over 18: Population of three races: Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030047</attrlabl>
+                <attrdef>Total Population over 18: Population of four races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030048</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030049</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030050</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030051</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030052</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030053</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030054</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030055</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030056</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030057</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: White; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030058</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030059</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030060</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030061</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030062</attrlabl>
+                <attrdef>Total Population over 18: Population of four races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030063</attrlabl>
+                <attrdef>Total Population over 18: Population of five races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030064</attrlabl>
+                <attrdef>Total Population over 18: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030065</attrlabl>
+                <attrdef>Total Population over 18: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030066</attrlabl>
+                <attrdef>Total Population over 18: Population of five races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030067</attrlabl>
+                <attrdef>Total Population over 18: Population of five races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030068</attrlabl>
+                <attrdef>Total Population over 18: Population of five races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030069</attrlabl>
+                <attrdef>Total Population over 18: Population of five races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030070</attrlabl>
+                <attrdef>Total Population over 18: Population of six races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0030071</attrlabl>
+                <attrdef>Total Population over 18: Population of six races: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040001</attrlabl>
+                <attrdef>Total Population over 18</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040002</attrlabl>
+                <attrdef>Total Population over 18: Hispanic or Latino</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040003</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040004</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of one race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040005</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: White alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040006</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Black or African American alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040007</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: American Indian and Alaska Native alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040008</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Asian alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040009</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Native Hawaiian and Other Pacific Islander alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040010</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Some Other Race alone</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040011</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040012</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040013</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: White; Black or African American</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040014</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: White; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040015</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: White; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040016</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: White; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040017</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: White; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040018</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040019</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040020</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040021</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040022</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040023</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040024</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040025</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040026</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040027</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of two or more races: Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040028</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040029</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Black or African American; American Indian and Alaska Native</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040030</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Black or African American; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040031</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Black or African American; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040032</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Black or African American; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040033</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040034</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040035</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040036</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040037</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040038</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: White; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040039</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040040</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040041</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040042</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040043</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040044</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040045</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040046</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040047</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040048</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040049</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of three races: Population of four races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040050</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Black or African American; American Indian and Alaska Native; Asian</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040051</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040052</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Black or African American; American Indian and Alaska Native; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040053</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040054</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Black or African American; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040055</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Black or African American; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040056</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040057</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040058</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040059</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: White; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040060</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040061</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040062</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040063</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040064</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040065</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: Population of five races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040066</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040067</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of five races: White; Black or African American; American Indian and Alaska Native; Asian; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040068</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of five races: White; Black or African American; American Indian and Alaska Native; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040069</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of five races: White; Black or African American; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040070</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of five races: White; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040071</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of five races: Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040072</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of four races: Population of six races</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0040073</attrlabl>
+                <attrdef>Total Population over 18: Not Hispanic or Latino: Population of six races: White; Black or African American; American Indian and Alaska Native; Asian; Native Hawaiian and Other Pacific Islander; Some Other Race</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>H0010001</attrlabl>
+                <attrdef>Total Housing Units</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>H0010002</attrlabl>
+                <attrdef>Total Housing Units: Occupied</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>H0010003</attrlabl>
+                <attrdef>Total Housing Units: Vacant</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050001</attrlabl>
+                <attrdef>Total Group Quarters Population</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050002</attrlabl>
+                <attrdef>Total Group Quarters Population: Institutionalized population</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050003</attrlabl>
+                <attrdef>Total Group Quarters Population: Institutionalized population: Correctional facilities for adults</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050004</attrlabl>
+                <attrdef>Total Group Quarters Population: Institutionalized population: Juvenile facilities</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050005</attrlabl>
+                <attrdef>Total Group Quarters Population: Institutionalized population: Nursing facilities/Skilled-nursing facilities</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050006</attrlabl>
+                <attrdef>Total Group Quarters Population: Institutionalized population: Other institutional facilities</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050007</attrlabl>
+                <attrdef>Total Group Quarters Population: Noninstitutionalized population</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050008</attrlabl>
+                <attrdef>Total Group Quarters Population: Noninstitutionalized population: College/University student housing</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050009</attrlabl>
+                <attrdef>Total Group Quarters Population: Noninstitutionalized population: Military quarters</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>P0050010</attrlabl>
+                <attrdef>Total Group Quarters Population: Noninstitutionalized population: Other noninstitutional facilities</attrdef>
+                <attrdefs>Census</attrdefs>
+            </attr>
+            <attr>
+                <attrlabl>SE_ANNO_CAD_DATA</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE.AREA</attrlabl>
+            </attr>
+            <attr>
+                <attrlabl>SHAPE.LEN</attrlabl>
+            </attr>
+        </detailed>
+    </eainfo>
+    <metainfo>
+        <metd>20210901</metd>
+        <metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+        <metstdv>FGDC-STD-001-1998</metstdv>
+        <mettc>local time</mettc>
+    </metainfo>
+</metadata>

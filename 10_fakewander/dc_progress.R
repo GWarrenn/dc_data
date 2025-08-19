@@ -1,10 +1,9 @@
-library("plotKML")
+library("tcxr")
 library("tidyverse")
-library("rgdal")
 library("sf")
 library("FITfileR")
 library("trackeR")
-
+library("R.utils")
 library("parallel")
 
 ##################################################
@@ -13,7 +12,9 @@ library("parallel")
 ##
 ##################################################
 
-activities <- read.csv("../08_rcp/export_4778598/activities.csv")
+export_filename <- "export_4778598"
+
+activities <- read.csv(paste0(export_filename,"/activities.csv"))
 
 activities <- activities %>%
   mutate(activity_date = as.POSIXct(activities$Activity.Date,format="%b %d, %Y, %H:%M:%S %p")) %>%
@@ -23,6 +24,14 @@ files <- activities$Filename
 
 centroids <- read.csv("../data/transportation/Block_Centroids.csv")
 df2_sf <- st_as_sf(centroids, coords = c("X", "Y"), crs = 4326)
+
+## unzipping files
+
+zip_files <- list.files(path = paste0(export_filename,"/activities/"), pattern = "\\.gz$", full.names = TRUE)
+
+for (file in zip_files) {
+  gunzip(file,overwrite=TRUE)
+}
 
 ##################################################
 ##
@@ -38,13 +47,15 @@ classify_streets <- function(file){
   
   ## GPX file processing
   
-  if(grepl("gpx|tcx", file)){ #|fit|tcx
+  if(grepl("gpx|tcx", file)){
   
     if(grepl("gpx", file, fixed = TRUE)){
       
-      route <- plotKML::readGPX(gpx.file = paste0("../08_rcp/export_4778598/",file))
+      #route <- plotKML::readGPX(gpx.file = paste0("export_4778598/",file))
+      route <- st_read(paste0(export_filename,"/",file), layer = "tracks") 
       
-      route_df <- as.data.frame(route$tracks[[1]][[1]])
+      route_df <- as.data.frame(route$geometry[[1]][[1]])
+      names(route_df) <- c("lon","lat")
       
     }
     
@@ -52,14 +63,14 @@ classify_streets <- function(file){
       
       file <- sub(pattern = "tcx.gz",replacement = "tcx",x = file)
       
-      my_txt <- readLines(paste0("../08_rcp/export_4778598/",file)) 
+      my_txt <- readLines(paste0("export_4778598/",file)) 
       my_txt[1] = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
       
-      fileConn <- file(paste0("../08_rcp/export_4778598/",gsub("activities","activities/fixed_tcx",file)))
+      fileConn <- file(paste0(export_filename,"/",gsub("activities","activities/fixed_tcx",file)))
       writeLines(my_txt, fileConn)
       close(fileConn)
       
-      route <- readTCX(paste0("../08_rcp/export_4778598/",gsub("activities","activities/fixed_tcx",file)))
+      route <- readTCX(paste0(export_filename,"/",gsub("activities","activities/fixed_tcx",file)))
       
       route_df <- route %>%
         arrange(time) %>%
@@ -73,7 +84,7 @@ classify_streets <- function(file){
     
     file <- sub(pattern = "fit.gz",replacement = "fit",x = file)
     
-    route <- readFitFile(paste0("../08_rcp/export_4778598/",file))
+    route <- readFitFile(paste0(export_filename,"/",file))
     
     route_df <- records(route) %>% 
       bind_rows() %>% 
@@ -116,19 +127,15 @@ for(file in files){
   }
 }
 
+res <- classify_streets("activities")
+
 processed_list <- all_data$file
 setdiff(files,processed_list)
 
-file <- "activities/12354415590.fit.gz"
-activities %>% filter(Filename == file) %>% select(Activity.Name)
-
-#classified_results <- mclapply(new_files, classify_streets, mc.cores=4)
+#classified_results <- mclapply(new_files, classify_streets, mc.cores=6)
 #all_data <- do.call("rbind", classified_results)
 
 stats <- all_data %>% group_by(MARID,BLOCKNAME) %>% summarise(count=n())
-
-test <- merge(activities,all_data,by.x ="Filename", by.y = "file",all.x = TRUE)
-test <- test %>% filter(is.na(WARD))
 
 centroids_w_stats <- merge(x = centroids, y = stats, by = "MARID", all.x = TRUE)
 

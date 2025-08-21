@@ -22,7 +22,7 @@ activities <- activities %>%
 
 files <- activities$Filename
 
-centroids <- read.csv("../data/transportation/Block_Centroids.csv")
+centroids <- read.csv("Block_Centroids.csv") ## https://datahub-dc-dcgis.hub.arcgis.com/datasets/block-centroids/explore
 df2_sf <- st_as_sf(centroids, coords = c("X", "Y"), crs = 4326)
 
 ## unzipping files

@@ -11,9 +11,11 @@ import os
 import shutil
 import time
 import tqdm
+import json
 
 import geopandas as gpd
 from shapely.geometry import Point, Polygon
+from geojson import LineString, Feature, FeatureCollection, dump
 
 import gpxpy
 import gpxpy.gpx
@@ -77,15 +79,35 @@ def process_gpx_files(gpx_list):
     '''
 
     all_data_df = pd.DataFrame()
+    all_dict = []
 
     for gpx_file in tqdm.tqdm(gpx_list):
 
         try:
 
             gpx_df = read_gpx_file(gpx_file)
+
+            try:
+                dict = {}
+
+                with open("./export_4778598/activities/" + gpx_file, 'r') as gpx_data:    
+                    gpx = gpxpy.parse(gpx_data)
+
+                for track in gpx.tracks:
+
+                    dict[track.name] = {}
+                    dict[track.name]['geo'] = []
+                    for segment in track.segments:
+                        for point in segment.points:
+                            dict[track.name]['geo'].append([point.longitude,point.latitude])
+
+                all_dict.append(dict)
+
+            except Exception as ex:
+                print(ex)
                 
             #block_centroids = pd.read_csv('Block_Centroids.csv')
-            block_centroids = gpd.read_file("Street_Centerlines_1999.geojson")
+            block_centroids = gpd.read_file("./data/Street_Centerlines_1999.geojson")
 
             gpx_matched_df = match_to_blocks(gpx_df,block_centroids=block_centroids)
             gpx_matched_df['file_name'] = gpx_file
@@ -105,7 +127,7 @@ def process_gpx_files(gpx_list):
         except Exception as e:
             print("Error with {}: {}".format(gpx_file,e))
 
-    return(all_data_df)
+    return(all_data_df,all_dict)
 
 def strava_authentication(cred_auth):
 
@@ -193,41 +215,99 @@ async def pull_activity_gpx(export_df,export_path,activities_list,s2g):
                     else:
                         bad_files.append(activity[1])
 
-def gpx_to_streets(export_path):
+def gpx_to_streets(export_path,refresh_results=False):
 
     gpx_file_list = []
 
-    for file in os.listdir(export_path):
-        if 'gpx' in file:
-            gpx_file_list.append(file)
+    if refresh_results:
+        already_processed_results = pd.DataFrame()
 
-    n_iterations = (os.cpu_count() // 2) - 2 ## this can be played with a bit here, anything higher than 5 tends to clog up compute and your computer may catch on fire
-    chunk_size = round(len(gpx_file_list) / n_iterations) ## creating the dataframe chunk sizes based on n_iterations -- more iterations --> smaller chunks
+        for file in os.listdir(export_path):
+            if ('gpx' in file):
+                gpx_file_list.append(file)
 
-    try:
-        chunks = [gpx_file_list[i:i + chunk_size] for i in range(0, len(gpx_file_list), chunk_size)]
-        df_list = chunks[0:n_iterations]
-        
-    except Exception as e:
-        print(e)
-        df_list = [gpx_file_list]
+    else:
+        already_processed_df = pd.read_csv("./data/processed_files.csv")
+        already_processed_list = already_processed_df['file_name'].to_list()
 
-    results = Parallel(n_jobs=n_iterations, prefer="threads")(delayed(process_gpx_files)(gpx_list) for gpx_list in df_list)
+        for file in os.listdir(export_path):
+            if ('gpx' in file) and (file not in already_processed_list):
+                gpx_file_list.append(file)
+                already_processed_list.append(file)
 
-    all_results = pd.DataFrame()
+        already_processed_results = pd.read_csv("./data/raw_results.csv")
 
-    for i in results:
-        all_results = pd.concat([all_results,i])
+    if len(gpx_file_list) > 0:
+
+        n_iterations = (os.cpu_count() // 2) - 1 ## this can be played with a bit here, anything higher than 5 tends to clog up compute and your computer may catch on fire
+        chunk_size = round(len(gpx_file_list) / n_iterations) ## creating the dataframe chunk sizes based on n_iterations -- more iterations --> smaller chunks
+
+        try:
+            chunks = [gpx_file_list[i:i + chunk_size] for i in range(0, len(gpx_file_list), chunk_size)]
+            df_list = chunks[0:n_iterations]
+            
+        except Exception as e:
+            df_list = [gpx_file_list]
+
+        results = Parallel(n_jobs=n_iterations, prefer="threads")(delayed(process_gpx_files)(gpx_list) for gpx_list in df_list)
+
+        ## append street matched data
+
+        all_results = pd.DataFrame()
+
+        for i in results:
+            all_results = pd.concat([all_results,i[0]])
+
+        already_processed_results = pd.concat([already_processed_results,all_results])
+
+        #already_processed_results.to_csv("./data/raw_results.csv",index=False)
+
+        #files = pd.DataFrame({'file_name':already_processed_list})
+        #files.to_csv("./data/processed_files.csv",index=False)
+    
+        ## append all gpx data
+
+        result_dict = {}
+
+        for item in results:
+            for record in item[1]:
+                for value in record:
+                    result_dict[value] = record[value]
+    else:
+        print("No new files to process")
 
     ## Aggregate coverage
 
-    stats = all_results.groupby(['OBJECTID'])['file_name'].nunique().reset_index()
+    stats = already_processed_results.groupby(['OBJECTID'])['file_name'].nunique().reset_index()
 
-    centroids = pd.read_csv('Street_Centerlines_1999.csv')
+    centroids = pd.read_csv('./data/Street_Centerlines_1999.csv')
 
     centroids_w_stats = pd.merge(centroids,stats,on='OBJECTID',how='left')
 
-    centroids_w_stats.to_csv("geocoded_results_20251103.csv",index=False)
+    #centroids_w_stats.to_csv("./data/geocoded_results_20251103.csv",index=False)
+
+    ## export geojson
+
+    block_centroids = gpd.read_file("./data/Street_Centerlines_1999.geojson")
+
+    gdf1 = gpd.GeoDataFrame(block_centroids, crs="EPSG:4326")
+
+    centroids_w_stats = pd.merge(gdf1,stats,on='OBJECTID',how='left')
+
+    #centroids_w_stats.to_file('output.geojson', driver='GeoJSON')
+
+    ## dumping geojson for all activities
+
+    features = []
+
+    for key in result_dict.keys():
+        features.append(Feature(geometry=LineString(result_dict[key]['geo']),
+                                properties={"Name": key}))
+
+    ## dump data to json file for mapping        
+            
+    with open('result_20251107.json', 'w') as fp:
+        json.dump(features, fp)
 
 async def main():
 
@@ -236,13 +316,13 @@ async def main():
 
     cred_auth = eval(open("strava_credentials.txt").read())
 
-    token_response = strava_authentication(cred_auth)
+    #token_response = strava_authentication(cred_auth)
 
-    activities_list,s2g = await get_activities_list(cred_auth,token_response)
+    #activities_list,s2g = await get_activities_list(cred_auth,token_response)
 
-    await pull_activity_gpx(export_df,export_path,activities_list,s2g)
+    #await pull_activity_gpx(export_df,export_path,activities_list,s2g)
 
-    gpx_to_streets(export_path)
+    gpx_to_streets(export_path,refresh_results=True)
 
 if __name__ == '__main__':  
     asyncio.run(main())

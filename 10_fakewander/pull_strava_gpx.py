@@ -260,11 +260,11 @@ def gpx_to_streets(export_path,refresh_results=False):
 
         already_processed_results = pd.concat([already_processed_results,all_results])
 
-        #already_processed_results.to_csv("./data/raw_results.csv",index=False)
+        already_processed_results.to_csv("./data/raw_results.csv",index=False)
 
-        #files = pd.DataFrame({'file_name':already_processed_list})
-        #files.to_csv("./data/processed_files.csv",index=False)
-    
+        files = pd.DataFrame({'file_name':already_processed_list})
+        files.to_csv("./data/processed_files.csv",index=False)
+        
         ## append all gpx data
 
         result_dict = {}
@@ -284,7 +284,7 @@ def gpx_to_streets(export_path,refresh_results=False):
 
     centroids_w_stats = pd.merge(centroids,stats,on='OBJECTID',how='left')
 
-    #centroids_w_stats.to_csv("./data/geocoded_results_20251103.csv",index=False)
+    centroids_w_stats.to_csv("./data/geocoded_results_20251103.csv",index=False)
 
     ## export geojson
 
@@ -294,7 +294,7 @@ def gpx_to_streets(export_path,refresh_results=False):
 
     centroids_w_stats = pd.merge(gdf1,stats,on='OBJECTID',how='left')
 
-    #centroids_w_stats.to_file('output.geojson', driver='GeoJSON')
+    centroids_w_stats.to_file('output.geojson', driver='GeoJSON')
 
     ## dumping geojson for all activities
 
@@ -322,7 +322,7 @@ async def main():
 
     #await pull_activity_gpx(export_df,export_path,activities_list,s2g)
 
-    gpx_to_streets(export_path,refresh_results=True)
+    gpx_to_streets(export_path,refresh_results=False)
 
 if __name__ == '__main__':  
     asyncio.run(main())
